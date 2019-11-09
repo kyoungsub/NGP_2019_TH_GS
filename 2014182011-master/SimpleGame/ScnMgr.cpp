@@ -35,7 +35,7 @@ ScnMgr::ScnMgr()
 	m_Sound = new Sound();
 
 	m_SoundBG = m_Sound->CreateSound("./Sounds/The Binding of Isaac - Sacrificial.mp3");
-	m_SoundTearsFire = m_Sound->CreateSound("./Sounds/Tears_Fire_0.mp3");	
+	m_SoundTearsFire = m_Sound->CreateSound("./Sounds/Tears_Fire_0.mp3");
 	m_SoundTearsImpacts = m_Sound->CreateSound("./Sounds/TearImpacts0.mp3");
 	m_SoundHurt = m_Sound->CreateSound("./Sounds/Isaac_Hurt_Grunt0.mp3");
 	m_SoundExplosion = m_Sound->CreateSound("./Sounds/Death_Burst_Large_0.mp3");
@@ -56,6 +56,7 @@ ScnMgr::ScnMgr()
 	m_HPTexture = m_Renderer->CreatePngTexture("./textures/ui_hearts.png");
 	m_WinTexture = m_Renderer->CreatePngTexture("./textures/loadimages-002.png");
 	m_DeathTexture = m_Renderer->CreatePngTexture("./textures/deathposter.png");
+	m_BossDoorTexture = m_Renderer->CreatePngTexture("./textures/BossDoor.png");
 
 	// Creat Hero Object
 	m_Objects[HERO_ID] = new Object();
@@ -70,11 +71,11 @@ ScnMgr::ScnMgr()
 	m_Objects[HERO_ID]->SetHP(240);
 	m_Objects[HERO_ID]->SetState(STATE_GROUND);
 
-	// Creat Boss Object
-	AddObject(1.5f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, KIND_BOSS, 200, STATE_GROUND);
-
 	// Creat Poop Object
 	AddObject(3.0f, -2.0f, 0.0f, 0.55f, 0.55f, 0.55f, 0.0f, 0.0f, 0.0f, KIND_POOP, 100, STATE_GROUND);
+
+	// Creat BossDoor Object
+	AddObject(0.0f, 1.35f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, KIND_BOSS_DOOR, 100, STATE_GROUND);
 
 	// Creat HP UI
 	m_HP[0] = new UI();
@@ -100,9 +101,9 @@ ScnMgr::ScnMgr()
 	m_HP[2]->SetKind(KIND_HP);
 	m_HP[2]->SetHP(80);
 	m_HP[2]->SetState(STATE_GROUND);
-	
+
 }
-	
+
 ScnMgr::~ScnMgr()
 {
 	if (m_Renderer) {
@@ -121,7 +122,7 @@ ScnMgr::~ScnMgr()
 void ScnMgr::RenderScene()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glClearColor(0.0f, 0.3f, 0.3f, 1.0f);	
+	glClearColor(0.0f, 0.3f, 0.3f, 1.0f);
 
 	// Render BG
 	m_Renderer->DrawTextureRectDepth(0, 0, 0, WINDOWS_WIDTH, WINDOWS_HEIGHT, 1, 1, 1, 1, m_BGTexture, 1.f);
@@ -136,7 +137,7 @@ void ScnMgr::RenderScene()
 			m_Objects[i]->GetColor(&r, &g, &b, &a);
 
 			float newX, newY, newZ, newsX, newsY, newsZ;
-			
+
 			newX = x * 100;
 			newY = y * 100;
 			newZ = z * 100;
@@ -201,6 +202,14 @@ void ScnMgr::RenderScene()
 					r, g, b, a,
 					m_PoopTexture, Poop_seq, 0,
 					5, 1
+				);
+			}
+			else if (kind == KIND_BOSS_DOOR) {
+				m_Renderer->DrawTextureRectHeight(
+					newX, newY, -1.5f,
+					newsX, newsY,
+					r, g, b, a,
+					m_BossDoorTexture, newZ
 				);
 			}
 			else if (kind == KIND_EFFECT) {
@@ -341,7 +350,7 @@ void ScnMgr::GarbageCollector()
 			m_Objects[i]->GetVel(&velx, &vely, &velz);
 
 			if (kind == KIND_HERO) {
-				if (hp <= 0) {					
+				if (hp <= 0) {
 					DeleteObject(i);
 					AddObject(0.0f, -0.5f, 0.0f, 4.0f, 4.0f, 4.0f, 0.0f, 0.0f, 0.0f, kIND_DEATH, 20, STATE_GROUND);
 					m_Sound->PlaySound(m_SoundDeath, false, 0.5f);
@@ -366,8 +375,8 @@ void ScnMgr::GarbageCollector()
 					continue;
 				}
 			}
-			if (kind == KIND_BULLET){
-				if (velx == 0.0f && vely == 0.0f){ // FLT_EPSILON을 사용하면 제자리에서 왼쪽과 아래쪽으로 미사일 발사가 안되는 현상이 있어서 0.0f값과 직접 비교
+			if (kind == KIND_BULLET) {
+				if (velx == 0.0f && vely == 0.0f) { // FLT_EPSILON을 사용하면 제자리에서 왼쪽과 아래쪽으로 미사일 발사가 안되는 현상이 있어서 0.0f값과 직접 비교
 
 					float px, py, pz;
 					float sx, sy, sz;
@@ -476,7 +485,7 @@ void ScnMgr::AddObject(float x, float y, float z, float sx, float sy, float sz, 
 	else if (kind == KIND_BOSS) {
 		m_Objects[id] = new Boss();
 	}
-	else if(kind == KIND_EFFECT){
+	else if (kind == KIND_EFFECT) {
 		m_Objects[id] = new Effect();
 	}
 	else {
@@ -624,7 +633,26 @@ void ScnMgr::DoCollisionTest()
 				minZ1 = pZ1 - sZ1 / 2.f;
 				maxZ1 = pZ1 + sZ1 / 2.f;
 
-				if (kind == KIND_HERO && kind1 == KIND_BULLET || kind == KIND_BULLET && kind1 == KIND_HERO || kind == KIND_HERO && kind1 == KIND_EFFECT || kind == KIND_EFFECT && kind1 == KIND_HERO) {
+				if (kind == KIND_HERO && kind1 == KIND_BULLET || kind == KIND_BULLET && kind1 == KIND_HERO || kind == KIND_HERO && kind1 == KIND_EFFECT || kind == KIND_EFFECT && kind1 == KIND_HERO || kind == KIND_HERO && kind1 == KIND_POOP || kind == KIND_POOP && kind1 == KIND_HERO) {
+					continue;
+				}
+				// BOSSDOOR와 충돌 했을 때
+				else if (kind == KIND_HERO && kind1 == KIND_BOSS_DOOR || kind == KIND_BOSS_DOOR && kind1 == KIND_HERO || kind == KIND_BULLET && kind1 == KIND_BOSS_DOOR || kind == KIND_BOSS_DOOR && kind1 == KIND_BULLET || kind == KIND_EFFECT && kind1 == KIND_BOSS_DOOR || kind == KIND_BOSS_DOOR && kind1 == KIND_EFFECT) {
+					if (RRCollision(minX, minY, minZ, maxX, maxY, maxZ, minX1, minY1, minZ1, maxX1, maxY1, maxZ1)) {
+						// Delete Door Object
+						if (kind == KIND_BOSS_DOOR) {
+							DeleteObject(i);
+						}
+						else if (kind1 == KIND_BOSS_DOOR) {
+							DeleteObject(j);
+						}
+
+						// Creat Boss Object
+						AddObject(1.5f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, KIND_BOSS, 200, STATE_GROUND);
+
+						// Change Map
+						ChangeMap(BOSSROOM);
+					}
 					continue;
 				}
 				else {
@@ -665,11 +693,11 @@ bool ScnMgr::RRCollision(float minX, float minY, float minZ, float maxX, float m
 
 void ScnMgr::ProcessCollison(int i, int j)
 {
-	
+
 
 	if (m_Objects[i] == NULL || m_Objects[j] == NULL)
 		return;
-	
+
 	Object *obj1 = m_Objects[i];
 	Object *obj2 = m_Objects[j];
 
@@ -704,14 +732,14 @@ void ScnMgr::ProcessCollison(int i, int j)
 	}
 	if (kind1 == KIND_HERO && kind2 == KIND_BOSS || kind1 == KIND_HERO && kind2 == KIND_MONSTER) {
 		g_HitStartTime = GetTickCount();
-		
+
 		int hp;
 		obj1->GetHP(&hp);
 		hp -= 40;
 		obj1->SetHP(hp);
 
 		int uhp = 0;
-		
+
 		int index = 0;
 		int SeqX = 0;
 
@@ -765,5 +793,15 @@ void ScnMgr::ProcessCollison(int i, int j)
 		Poop_seq++;
 		hp = 0;
 		obj1->SetHP(hp);
+	}
+}
+
+void ScnMgr::ChangeMap(int kind)
+{
+	if (kind == DEFAULTROOM) {
+		m_BGTexture = m_Renderer->CreatePngTexture("./textures/Basement01.png");
+	}
+	else if (kind == BOSSROOM) {
+		m_BGTexture = m_Renderer->CreatePngTexture("./textures/BossRoom.png");
 	}
 }

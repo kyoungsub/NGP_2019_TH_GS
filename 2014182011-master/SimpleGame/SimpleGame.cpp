@@ -23,14 +23,14 @@ DWORD g_PrevTime = 0;
 
 BOOL g_KeyW = FALSE;
 BOOL g_KeyA = FALSE;
-BOOL g_KeyS = FALSE;	
+BOOL g_KeyS = FALSE;
 BOOL g_KeyD = FALSE;
 BOOL g_KeySP = FALSE;
 
 int g_Shoot = SHOOT_NONE;
 DWORD g_ShootStartTime = 0;
 
-void RenderScene(int temp){
+void RenderScene(int temp) {
 
 	// Calc Elapsed Time
 	if (g_PrevTime == 0) {
@@ -71,11 +71,11 @@ void RenderScene(int temp){
 
 	g_ScnMgr->ApplyForce(forceX, forceY, forceZ, eTime);
 
-	
+
 	g_ScnMgr->Update(eTime);	// Update	
 	g_ScnMgr->RenderScene();	// Render	
-	if (ShootElapsedTime % 100 == 0){ // Shoot
-		g_ScnMgr->Shoot(g_Shoot);	
+	if (ShootElapsedTime % 50 == 0) { // Shoot
+		g_ScnMgr->Shoot(g_Shoot);
 	}
 	g_ScnMgr->GarbageCollector();	// 화면 밖으로 나가는 오브젝트 삭제
 	g_ScnMgr->DoCollisionTest();
@@ -85,17 +85,17 @@ void RenderScene(int temp){
 	glutTimerFunc(16, RenderScene, 0);
 }
 
-void Display(void){
+void Display(void) {
 }
 
-void Idle(void){
+void Idle(void) {
 }
 
-void MouseInput(int button, int state, int x, int y){
-	
+void MouseInput(int button, int state, int x, int y) {
+
 }
 
-void KeyDownInput(unsigned char key, int x, int y){
+void KeyDownInput(unsigned char key, int x, int y) {
 	if (key == 'w') {
 		g_KeyW = TRUE;
 	}
@@ -136,12 +136,12 @@ void SetKeyRepeat() {
 }
 
 
-void SpecialKeyDownInput(int key, int x, int y){	
+void SpecialKeyDownInput(int key, int x, int y) {
 	g_ShootStartTime = GetTickCount();
 
 	switch (key)
 	{
-	case GLUT_KEY_UP: 
+	case GLUT_KEY_UP:
 		g_Shoot = SHOOT_UP;
 		break;
 	case GLUT_KEY_DOWN:
@@ -156,14 +156,14 @@ void SpecialKeyDownInput(int key, int x, int y){
 	default:
 		break;
 	}
-	 
+
 }
 
 void SpecialKeyUpInput(int key, int x, int y) {
 	g_Shoot = SHOOT_NONE;
 }
 
-int main(int argc, char **argv){
+int main(int argc, char **argv) {
 
 	// Initialize GL things
 	glutInit(&argc, argv);
@@ -175,10 +175,10 @@ int main(int argc, char **argv){
 
 	glewInit();
 
-	if (glewIsSupported("GL_VERSION_3_0")){
+	if (glewIsSupported("GL_VERSION_3_0")) {
 		std::cout << " GLEW Version is 3.0\n ";
 	}
-	else{
+	else {
 		std::cout << "GLEW 3.0 not supported\n ";
 	}
 
