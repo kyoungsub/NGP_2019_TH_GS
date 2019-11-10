@@ -4,6 +4,7 @@
 #define WINDOWS_HEIGHT 600
 
 #define HERO_ID 0
+#define HERO_ID2 1
 
 #define MAX_OBJECTS 300
 
@@ -19,11 +20,15 @@
 #define KIND_MONSTER 3
 #define KIND_BOSS 4
 #define KIND_POOP 5
-#define KIND_HP 6
-#define KIND_WIN 7
-#define kIND_DEATH 8
+#define KIND_BOSS_DOOR 6
+#define KIND_HP 7
+#define KIND_WIN 8
+#define kIND_DEATH 9
 
 #define STATE_GROUND 0
 #define STATE_AIR 1
 
 #define GRAVITY 9.8
+
+#define	DEFAULTROOM 101
+#define BOSSROOM 102

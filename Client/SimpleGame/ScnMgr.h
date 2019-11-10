@@ -26,6 +26,7 @@ private:
 	GLuint m_HPTexture = 0;
 	GLuint m_WinTexture = 0;
  	GLuint m_DeathTexture = 0;
+	GLuint m_BossDoorTexture = 0;
 
 	int m_SoundBG = 0;
 	int m_SoundTearsFire = 0;
@@ -57,5 +58,7 @@ public:
 	void DoCollisionTest();
 	bool RRCollision(float minX, float minY, float minZ, float maxX, float maxY, float maxZ, float minX1, float minY1, float minZ1, float maxX1, float maxY1, float maxZ1);
 	void ProcessCollison(int i, int j);	
+
+	void ChangeMap(int kind);
 };
 
