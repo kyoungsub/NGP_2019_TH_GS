@@ -17,6 +17,30 @@ but WITHOUT ANY WARRANTY.
 #include "Global.h"
 #include "ScnMgr.h"
 
+#pragma pack(1)
+struct recvData{
+	float posX, posY;
+	float VelX, VelY;
+	int type, idx_num;
+};
+#pragma pack()
+
+#pragma pack(1)
+struct sendData {
+	float posX, posY;
+	float VelX, VelY;
+	int type, idx_num;
+};
+#pragma pack()
+
+#pragma pack(1)
+struct InitData {
+	float mass;
+	float size;
+	float coef_Frict;
+};
+#pragma pack()
+
 ScnMgr *g_ScnMgr = NULL;
 
 DWORD g_PrevTime = 0;
