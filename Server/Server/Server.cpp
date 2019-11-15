@@ -9,39 +9,12 @@
 #include<io.h>
 #include<fcntl.h>
 
+#include "Datastruct.h"
+#include "Boss.h"
+
 #define SERVERPORT 9000
+#define BUFSIZE 1024
 
-
-//전송 구조체
-#pragma pack(1)
-struct RecvSendData {
-	float posX, posY;
-	float VelX, VelY;
-	int type, idx_num;
-};
-#pragma pack()
-
-#pragma pack(1)
-struct InitData {
-	float mass;
-	float sizeX, sizeY;
-	float coef_Frict;
-};
-#pragma pack()
-
-struct Object
-{
-	int type;			//객체의 종류
-	int idx_num;		//객체의 인덱스(배열 위치)
-	float posX, posY;	//위치
-	float sizeX, sizeY;	//크기
-	float velX, velY;	//속도
-	float mass;			//질량
-	float coefFriction;	//마찰계수
-	float elapsed_time;	//경과시간
-	int HP;				//체력
-	int State;			//생사여부
-};
 
 // 소켓 함수 오류 출력 후 종료
 void err_quit(const char* msg)
@@ -97,10 +70,37 @@ DWORD WINAPI RecvThread(LPVOID arg)
 	SOCKET client_sock = (SOCKET)arg;
 	SOCKADDR_IN clientaddr;
 	int addrlen;
+	int len;
+	char buf[BUFSIZE];
+	InitData* initial_data;
+	RecvSendData* RS_data;
+
 
 	addrlen = sizeof(client_sock);
 	getpeername(client_sock, (SOCKADDR*)& clientaddr, &addrlen);
+	
 
+	//data 받기
+	retval = recvn(client_sock, (char *)& len, sizeof(int), 0);
+	if (retval == SOCKET_ERROR) err_display("recv()");
+	retval = recvn(client_sock, buf, len, 0);
+	if (retval == SOCKET_ERROR) err_display("recv()");
+
+	if (len == sizeof(InitData)) {
+		initial_data = (InitData*)buf;
+		//디버깅용 출력코드
+		printf("mass : %f, size : %f %f %f, coef_frict : %f \n",
+			initial_data->mass, initial_data->sizeX, initial_data->sizeY, initial_data->sizeZ, initial_data->coef_Frict);
+	}
+
+	if (len == sizeof(RecvSendData)) {
+		RS_data = (RecvSendData*)buf;
+		//디버깅용 출력코드
+		printf("Pos : %f %f %f, Vel : %f %f %f, type: %d, idx_num : %d\n",
+			RS_data->posX, RS_data->posY, RS_data->posZ,
+			RS_data->VelX, RS_data->VelY, RS_data->VelZ,
+			RS_data->type, RS_data->idx_num);
+	}
 
 
 	return 0;
@@ -125,6 +125,10 @@ DWORD WINAPI SendThread(LPVOID arg)
 int main(int argc, char* argv[])
 {
 	int retval;
+
+	//initialize boss data
+	Boss Boss;
+	Boss.InitBoss();
 
 	// 윈속 초기화
 	WSADATA wsa;
@@ -165,6 +169,10 @@ int main(int argc, char* argv[])
 
 		// 접속한 클라이언트 정보 출력
 		printf("\n[TCP 서버] 클라이언트 접속: IP 주소=%s, 포트 번호=%d\n",inet_ntoa(clientaddr.sin_addr), ntohs(clientaddr.sin_port));
+
+		//InitData
+		
+		//retval = send(client_sock, )
 
 		hThread = CreateThread(NULL, 0, RecvThread, (LPVOID)client_sock, 0, NULL);
 
