@@ -10,6 +10,13 @@ but WITHOUT ANY WARRANTY.
 
 */
 
+//#define _WINSOCK_DEPRECATED_NO_WARNINGS // 최신 VC++ 컴파일 시 경고 방지
+#pragma comment(lib, "ws2_32")
+#include <winsock2.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <fstream>
+
 #include "stdafx.h"
 #include <iostream>
 #include "Dependencies\glew.h"
@@ -17,18 +24,22 @@ but WITHOUT ANY WARRANTY.
 #include "Global.h"
 #include "ScnMgr.h"
 
+#define SERVERIP   "127.0.0.1"
+#define SERVERPORT 9000
+#define BUFSIZE    1024
+
 #pragma pack(1)
-struct recvData{
-	float posX, posY;
-	float VelX, VelY;
+struct recvData {
+	float posX, posY, posZ;
+	float VelX, VelY, VelZ;
 	int type, idx_num;
 };
 #pragma pack()
 
 #pragma pack(1)
 struct sendData {
-	float posX, posY;
-	float VelX, VelY;
+	float posX, posY, posZ;
+	float VelX, VelY, VelZ;
 	int type, idx_num;
 };
 #pragma pack()
@@ -53,6 +64,63 @@ BOOL g_KeySP = FALSE;
 
 int g_Shoot = SHOOT_NONE;
 DWORD g_ShootStartTime = 0;
+
+// 소켓 함수 오류 출력 후 종료
+void err_quit(char *msg)
+{
+	LPVOID lpMsgBuf;
+	FormatMessage(
+		FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+		NULL, WSAGetLastError(),
+		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+		(LPTSTR)&lpMsgBuf, 0, NULL);
+	MessageBox(NULL, (LPCTSTR)lpMsgBuf, (LPCTSTR)msg, MB_ICONERROR);
+	LocalFree(lpMsgBuf);
+	exit(1);
+}
+
+// 소켓 함수 오류 출력
+void err_display(char *msg)
+{
+	LPVOID lpMsgBuf;
+	FormatMessage(
+		FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+		NULL, WSAGetLastError(),
+		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+		(LPTSTR)&lpMsgBuf, 0, NULL);
+	printf("[%s] %s", msg, (char *)lpMsgBuf);
+	LocalFree(lpMsgBuf);
+}
+
+DWORD WINAPI SendThread(LPVOID arg)
+{
+	int retval;
+	SOCKET sock = (SOCKET)arg;
+	SOCKADDR_IN clientaddr;
+	int addrlen;
+
+	addrlen = sizeof(sock);
+	getpeername(sock, (SOCKADDR*)& clientaddr, &addrlen);
+
+	// 파일 데이터 전송에 사용할 변수
+	char buf[BUFSIZE];
+	int curread;
+	int curtotal = 0;
+
+	// player 1 Send Data
+	sendData sData;
+
+	g_ScnMgr->m_Objects[HERO_ID]->GetPos(&sData.posX, &sData.posY, &sData.posZ);
+	g_ScnMgr->m_Objects[HERO_ID]->GetVel(&sData.VelX, &sData.VelY, &sData.VelZ);
+	g_ScnMgr->m_Objects[HERO_ID]->GetKind(&sData.type);
+	sData.idx_num = HERO_ID;
+
+	send(sock, (const char*)&sData, sizeof(sData), 0);
+
+
+	return 0;
+}
+
 
 void RenderScene(int temp) {
 
@@ -95,13 +163,13 @@ void RenderScene(int temp) {
 
 	g_ScnMgr->ApplyForce(forceX, forceY, forceZ, eTime);
 
+	g_ScnMgr->Update(eTime);   // Update   
 
-	g_ScnMgr->Update(eTime);	// Update	
-	g_ScnMgr->RenderScene();	// Render	
+	g_ScnMgr->RenderScene();   // Render   
 	if (ShootElapsedTime % 50 == 0) { // Shoot
 		g_ScnMgr->Shoot(g_Shoot);
 	}
-	g_ScnMgr->GarbageCollector();	// 화면 밖으로 나가는 오브젝트 삭제
+	g_ScnMgr->GarbageCollector();   // 화면 밖으로 나가는 오브젝트 삭제
 	g_ScnMgr->DoCollisionTest();
 
 	glutSwapBuffers();
@@ -189,6 +257,29 @@ void SpecialKeyUpInput(int key, int x, int y) {
 
 int main(int argc, char **argv) {
 
+	//-----------------------------------------------------------------------------------//
+	int retval;
+
+	// 윈속 초기화
+	WSADATA wsa;
+	if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0);
+	//return 1;
+
+	// socket()
+	SOCKET sock = socket(AF_INET, SOCK_STREAM, 0);
+	if (sock == INVALID_SOCKET) err_quit("socket()");
+
+	// connect()
+	SOCKADDR_IN serveraddr;
+	ZeroMemory(&serveraddr, sizeof(serveraddr));
+	serveraddr.sin_family = AF_INET;
+	serveraddr.sin_addr.s_addr = inet_addr(SERVERIP);
+	serveraddr.sin_port = htons(SERVERPORT);
+	retval = connect(sock, (SOCKADDR *)&serveraddr, sizeof(serveraddr));
+	if (retval == SOCKET_ERROR) err_quit("connect()");	
+	
+	//-----------------------------------------------------------------------------------//
+
 	// Initialize GL things
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
@@ -219,6 +310,21 @@ int main(int argc, char **argv) {
 	glutSetKeyRepeat(GLUT_KEY_REPEAT_OFF);
 	// Init ScnMgr
 	g_ScnMgr = new ScnMgr();
+
+	// 파일 데이터 전송에 사용할 변수
+	char buf[BUFSIZE];
+	int curread;
+	int curtotal = 0;
+
+	// player 1 Send Data
+	sendData sData;
+
+	g_ScnMgr->m_Objects[HERO_ID]->GetPos(&sData.posX, &sData.posY, &sData.posZ);		
+	g_ScnMgr->m_Objects[HERO_ID]->GetVel(&sData.VelX, &sData.VelY, &sData.VelZ);
+	g_ScnMgr->m_Objects[HERO_ID]->GetKind(&sData.type);
+	sData.idx_num = HERO_ID;
+
+	send(sock, (const char*)&sData, sizeof(sData), 0);
 
 	g_PrevTime = glutGet(GLUT_ELAPSED_TIME);
 	glutTimerFunc(16, RenderScene, 0);

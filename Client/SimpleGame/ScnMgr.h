@@ -12,7 +12,6 @@
 class ScnMgr
 {
 private:
-	Object *m_Objects[MAX_OBJECTS];
 	Object *m_HP[20];
 	Renderer * m_Renderer;
 	Sound *m_Sound;
@@ -39,6 +38,9 @@ private:
 	int m_SoundDeath = 0;
 
 public:
+
+	Object *m_Objects[MAX_OBJECTS];
+
 	ScnMgr();
 	~ScnMgr();
 	
