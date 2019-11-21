@@ -15,6 +15,8 @@
 #define SERVERPORT 9000
 #define BUFSIZE 1024
 
+Object g_Object[MAX_OBJECTS];
+
 
 // 소켓 함수 오류 출력 후 종료
 void err_quit(const char* msg)
@@ -87,14 +89,14 @@ DWORD WINAPI RecvThread(LPVOID arg)
 	if (retval == SOCKET_ERROR) err_display("recv()");
 
 	if (len == sizeof(InitData)) {
-		initial_data = (InitData*)buf;
+		initial_data = (InitData*)&buf;
 		//디버깅용 출력코드
 		printf("mass : %f, size : %f %f %f, coef_frict : %f \n",
 			initial_data->mass, initial_data->sizeX, initial_data->sizeY, initial_data->sizeZ, initial_data->coef_Frict);
 	}
 
 	if (len == sizeof(RecvSendData)) {
-		RS_data = (RecvSendData*)buf;
+		RS_data = (RecvSendData*)&buf;
 		//디버깅용 출력코드
 		printf("Pos : %f %f %f, Vel : %f %f %f, type: %d, idx_num : %d\n",
 			RS_data->posX, RS_data->posY, RS_data->posZ,

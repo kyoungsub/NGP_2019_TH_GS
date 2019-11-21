@@ -4,6 +4,11 @@
 #include <windows.h>
 #include <random>
 
+#define HERO_ID 0
+#define HERO_ID2 1
+
+#define MAX_OBJECTS 300
+
 #define SHOOT_NONE -1
 #define SHOOT_LEFT 1
 #define SHOOT_RIGHT 2

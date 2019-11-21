@@ -315,6 +315,7 @@ int main(int argc, char **argv) {
 	char buf[BUFSIZE];
 	int curread;
 	int curtotal = 0;
+	int len;
 
 	// player 1 Send Data
 	sendData sData;
@@ -324,7 +325,9 @@ int main(int argc, char **argv) {
 	g_ScnMgr->m_Objects[HERO_ID]->GetKind(&sData.type);
 	sData.idx_num = HERO_ID;
 
-	send(sock, (const char*)&sData, sizeof(sData), 0);
+	len = sizeof(sData);
+	send(sock, (char*)&len, sizeof(int), 0);
+	send(sock, (const char*)&sData, len, 0);
 
 	g_PrevTime = glutGet(GLUT_ELAPSED_TIME);
 	glutTimerFunc(16, RenderScene, 0);
