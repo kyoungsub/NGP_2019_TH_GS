@@ -496,7 +496,7 @@ void ScnMgr::AddObject(float x, float y, float z, float sx, float sy, float sz, 
 	m_Objects[id]->SetVel(vx, vy, vz);
 	m_Objects[id]->SetAcc(0.0f, 0.0f, 0.0f);
 	m_Objects[id]->SetSize(sx, sy, sz);
-	m_Objects[id]->SetMass(0.15f);
+	m_Objects[id]->SetMass(0.2f);
 	m_Objects[id]->SetCoefFrict(5.0f);
 	m_Objects[id]->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 	m_Objects[id]->SetKind(kind);
