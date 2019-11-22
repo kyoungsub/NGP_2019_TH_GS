@@ -1,3 +1,3 @@
 ﻿  Server.cpp
-c:\users\gyeongseoplee\documents\github\ngp_2019_th_gs\server\server\server.cpp(139): warning C4101: 'retval' :참조되지 않은 지역 변수입니다.
-  Server.vcxproj -> C:\Users\GyeongseopLee\Documents\GitHub\NGP_2019_TH_GS\Server\Debug\Server.exe
+c:\users\kimtaehwa\desktop\github\ngp_2019_th_gs\server\server\server.cpp(139): warning C4101: 'retval' :참조되지 않은 지역 변수입니다.
+  Server.vcxproj -> C:\Users\KimTaeHwa\Desktop\GitHub\NGP_2019_TH_GS\Server\Debug\Server.exe

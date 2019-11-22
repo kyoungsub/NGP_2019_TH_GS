@@ -81,55 +81,55 @@ DWORD WINAPI RecvThread(LPVOID arg)
 	addrlen = sizeof(client_sock);
 	getpeername(client_sock, (SOCKADDR*)& clientaddr, &addrlen);
 	
+	while (1) {
+		//data 받기
+		retval = recvn(client_sock, (char *)& len, sizeof(int), 0);
+		if (retval == SOCKET_ERROR) err_display("recv()");
+		retval = recvn(client_sock, buf, len, 0);
+		if (retval == SOCKET_ERROR) err_display("recv()");
 
-	//data 받기
-	retval = recvn(client_sock, (char *)& len, sizeof(int), 0);
-	if (retval == SOCKET_ERROR) err_display("recv()");
-	retval = recvn(client_sock, buf, len, 0);
-	if (retval == SOCKET_ERROR) err_display("recv()");
-
-	if (len == sizeof(InitData)) {
-		initial_data = (InitData*)&buf;
-		//디버깅용 출력코드
-		printf("mass : %f, size : %f %f %f, coef_frict : %f \n",
-			initial_data->mass, initial_data->sizeX, initial_data->sizeY, initial_data->sizeZ, initial_data->coef_Frict);
-	}
-
-	if (initial_data->mass == 0.15f) {		//플레이어 데이터
-		if (g_Object[0].posX != NULL)		//1번플레이어 없을때
-		{
-			g_Object[0].posX = -0.5f;
-			g_Object[0].posY = 0.f;
-			g_Object[0].posZ = 0.f;
-			g_Object[0].velX = 0.f;
-			g_Object[0].velY = 0.f;
-			g_Object[0].velZ = 0.f;
-			g_Object[0].type = KIND_HERO;
+		if (len == sizeof(InitData)) {
+			initial_data = (InitData*)&buf;
+			//디버깅용 출력코드
+			printf("mass : %f, size : %f %f %f, coef_frict : %f \n",
+				initial_data->mass, initial_data->sizeX, initial_data->sizeY, initial_data->sizeZ, initial_data->coef_Frict);
 		}
-		else {								//2번플레이어
-			g_Object[1].posX = 0.5f;
-			g_Object[1].posY = 0.f;
-			g_Object[1].posZ = 0.f;
-			g_Object[1].velX = 0.f;
-			g_Object[1].velY = 0.f;
-			g_Object[1].velZ = 0.f;
-			g_Object[1].type = KIND_HERO;
+
+		if (initial_data->mass == 0.15f) {		//플레이어 데이터
+			if (g_Object[0].posX != NULL)		//1번플레이어 없을때
+			{
+				g_Object[0].posX = -0.5f;
+				g_Object[0].posY = 0.f;
+				g_Object[0].posZ = 0.f;
+				g_Object[0].velX = 0.f;
+				g_Object[0].velY = 0.f;
+				g_Object[0].velZ = 0.f;
+				g_Object[0].type = KIND_HERO;
+			}
+			else {								//2번플레이어
+				g_Object[1].posX = 0.5f;
+				g_Object[1].posY = 0.f;
+				g_Object[1].posZ = 0.f;
+				g_Object[1].velX = 0.f;
+				g_Object[1].velY = 0.f;
+				g_Object[1].velZ = 0.f;
+				g_Object[1].type = KIND_HERO;
+			}
+		}
+		else if (initial_data->mass == 0.2f) {		//총알
+
+		}
+
+
+		if (len == sizeof(RecvSendData)) {
+			RS_data = (RecvSendData*)&buf;
+			//디버깅용 출력코드
+			printf("Pos : %f %f %f, Vel : %f %f %f, type: %d, idx_num : %d\n",
+				RS_data->posX, RS_data->posY, RS_data->posZ,
+				RS_data->VelX, RS_data->VelY, RS_data->VelZ,
+				RS_data->type, RS_data->idx_num);
 		}
 	}
-	else if(initial_data->mass == 0.2f) {		//총알
-
-	}
-
-
-	if (len == sizeof(RecvSendData)) {
-		RS_data = (RecvSendData*)&buf;
-		//디버깅용 출력코드
-		printf("Pos : %f %f %f, Vel : %f %f %f, type: %d, idx_num : %d\n",
-			RS_data->posX, RS_data->posY, RS_data->posZ,
-			RS_data->VelX, RS_data->VelY, RS_data->VelZ,
-			RS_data->type, RS_data->idx_num);
-	}
-
 
 	return 0;
 }
