@@ -32,3 +32,31 @@
 
 #define	DEFAULTROOM 101
 #define BOSSROOM 102
+
+#define SERVERIP   "127.0.0.1"
+#define SERVERPORT 9000
+#define BUFSIZE    1024
+
+#pragma pack(1)
+struct recvData {
+	float posX, posY, posZ;
+	float VelX, VelY, VelZ;
+	int type, idx_num;
+};
+#pragma pack()
+
+#pragma pack(1)
+struct sendData {
+	float posX, posY, posZ;
+	float VelX, VelY, VelZ;
+	int type, idx_num;
+};
+#pragma pack()
+
+#pragma pack(1)
+struct InitData {
+	float mass;
+	float sizeX, sizeY, sizeZ;
+	float coef_Frict;
+};
+#pragma pack()

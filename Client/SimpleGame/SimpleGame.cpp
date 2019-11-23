@@ -24,34 +24,6 @@ but WITHOUT ANY WARRANTY.
 #include "Global.h"
 #include "ScnMgr.h"
 
-#define SERVERIP   "127.0.0.1"
-#define SERVERPORT 9000
-#define BUFSIZE    1024
-
-#pragma pack(1)
-struct recvData {
-	float posX, posY, posZ;
-	float VelX, VelY, VelZ;
-	int type, idx_num;
-};
-#pragma pack()
-
-#pragma pack(1)
-struct sendData {
-	float posX, posY, posZ;
-	float VelX, VelY, VelZ;
-	int type, idx_num;
-};
-#pragma pack()
-
-#pragma pack(1)
-struct InitData {
-	float mass;
-	float size;
-	float coef_Frict;
-};
-#pragma pack()
-
 ScnMgr *g_ScnMgr = NULL;
 
 DWORD g_PrevTime = 0;
@@ -64,6 +36,8 @@ BOOL g_KeySP = FALSE;
 
 int g_Shoot = SHOOT_NONE;
 DWORD g_ShootStartTime = 0;
+
+SOCKET g_sock;
 
 // 소켓 함수 오류 출력 후 종료
 void err_quit(char *msg)
@@ -91,36 +65,6 @@ void err_display(char *msg)
 	printf("[%s] %s", msg, (char *)lpMsgBuf);
 	LocalFree(lpMsgBuf);
 }
-
-DWORD WINAPI SendThread(LPVOID arg)
-{
-	int retval;
-	SOCKET sock = (SOCKET)arg;
-	SOCKADDR_IN clientaddr;
-	int addrlen;
-
-	addrlen = sizeof(sock);
-	getpeername(sock, (SOCKADDR*)& clientaddr, &addrlen);
-
-	// 파일 데이터 전송에 사용할 변수
-	char buf[BUFSIZE];
-	int curread;
-	int curtotal = 0;
-
-	// player 1 Send Data
-	sendData sData;
-
-	g_ScnMgr->m_Objects[HERO_ID]->GetPos(&sData.posX, &sData.posY, &sData.posZ);
-	g_ScnMgr->m_Objects[HERO_ID]->GetVel(&sData.VelX, &sData.VelY, &sData.VelZ);
-	g_ScnMgr->m_Objects[HERO_ID]->GetKind(&sData.type);
-	sData.idx_num = HERO_ID;
-
-	send(sock, (const char*)&sData, sizeof(sData), 0);
-
-
-	return 0;
-}
-
 
 void RenderScene(int temp) {
 
@@ -173,6 +117,24 @@ void RenderScene(int temp) {
 	g_ScnMgr->DoCollisionTest();
 
 	glutSwapBuffers();
+
+	// 파일 데이터 전송에 사용할 변수
+	char buf[BUFSIZE];
+	int curread;
+	int curtotal = 0;
+	int len;
+
+	// player 1 Send Data
+	sendData sData;
+
+	g_ScnMgr->m_Objects[HERO_ID]->GetPos(&sData.posX, &sData.posY, &sData.posZ);
+	g_ScnMgr->m_Objects[HERO_ID]->GetVel(&sData.VelX, &sData.VelY, &sData.VelZ);
+	g_ScnMgr->m_Objects[HERO_ID]->GetKind(&sData.type);
+	sData.idx_num = HERO_ID;
+
+	len = sizeof(sData);
+	send(g_sock, (char*)&len, sizeof(int), 0);
+	send(g_sock, (const char*)&sData, len, 0);
 
 	glutTimerFunc(16, RenderScene, 0);
 }
@@ -266,8 +228,8 @@ int main(int argc, char **argv) {
 	//return 1;
 
 	// socket()
-	SOCKET sock = socket(AF_INET, SOCK_STREAM, 0);
-	if (sock == INVALID_SOCKET) err_quit("socket()");
+	g_sock = socket(AF_INET, SOCK_STREAM, 0);
+	if (g_sock == INVALID_SOCKET) err_quit("socket()");
 
 	// connect()
 	SOCKADDR_IN serveraddr;
@@ -275,7 +237,7 @@ int main(int argc, char **argv) {
 	serveraddr.sin_family = AF_INET;
 	serveraddr.sin_addr.s_addr = inet_addr(SERVERIP);
 	serveraddr.sin_port = htons(SERVERPORT);
-	retval = connect(sock, (SOCKADDR *)&serveraddr, sizeof(serveraddr));
+	retval = connect(g_sock, (SOCKADDR *)&serveraddr, sizeof(serveraddr));
 	if (retval == SOCKET_ERROR) err_quit("connect()");	
 	
 	//-----------------------------------------------------------------------------------//
@@ -317,17 +279,17 @@ int main(int argc, char **argv) {
 	int curtotal = 0;
 	int len;
 
-	// player 1 Send Data
-	sendData sData;
+	// Init Data Send
+	InitData iData;
+	iData.coef_Frict = 0.5f;
+	iData.mass = 0.15f;
+	iData.sizeX = 0.6f;
+	iData.sizeY = 0.6f;
+	iData.sizeZ = 0.6f;
 
-	g_ScnMgr->m_Objects[HERO_ID]->GetPos(&sData.posX, &sData.posY, &sData.posZ);		
-	g_ScnMgr->m_Objects[HERO_ID]->GetVel(&sData.VelX, &sData.VelY, &sData.VelZ);
-	g_ScnMgr->m_Objects[HERO_ID]->GetKind(&sData.type);
-	sData.idx_num = HERO_ID;
-
-	len = sizeof(sData);
-	send(sock, (char*)&len, sizeof(int), 0);
-	send(sock, (const char*)&sData, len, 0);
+	len = sizeof(iData);
+	send(g_sock, (char*)&len, sizeof(int), 0);
+	send(g_sock, (const char*)&iData, len, 0);
 
 	g_PrevTime = glutGet(GLUT_ELAPSED_TIME);
 	glutTimerFunc(16, RenderScene, 0);

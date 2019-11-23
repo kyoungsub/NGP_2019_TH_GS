@@ -131,7 +131,6 @@ DWORD WINAPI RecvThread(LPVOID arg)
 		}
 	}
 
-
 	return 0;
 }
 
