@@ -65,6 +65,30 @@ int recvn(SOCKET s, char* buf, int len, int flags)
 	return (len - left);
 }
 
+//Object를 RSData로 변환
+void ObjectToRS(Object a, RecvSendData b) {
+	b.posX = a.posX;
+	b.posY = a.posY;
+	b.posZ = a.posZ;
+	b.VelX = a.velX;
+	b.VelY = a.velY;
+	b.VelZ = a.velZ;
+	b.type = a.type;
+	b.idx_num = a.idx_num;
+}
+
+//RSData를 Object로 변환
+void RSToObject(Object a, RecvSendData b) {
+	a.posX = b.posX;
+	a.posY = b.posY;
+	a.posZ = b.posZ;
+	a.velX = b.VelX;
+	a.velY = b.VelY;
+	a.velZ = b.VelZ;
+	a.type = b.type;
+	a.idx_num = b.idx_num;
+}
+
 //송신 스레드
 DWORD WINAPI RecvThread(LPVOID arg)
 {
@@ -76,6 +100,8 @@ DWORD WINAPI RecvThread(LPVOID arg)
 	char buf[BUFSIZE];
 	InitData* initial_data = nullptr;
 	RecvSendData* RS_data;
+
+	bool player1;
 
 
 	addrlen = sizeof(client_sock);
@@ -96,7 +122,7 @@ DWORD WINAPI RecvThread(LPVOID arg)
 		}
 
 		if (initial_data->mass == 0.15f) {		//플레이어 데이터
-			if (g_Object[0].posX != NULL)		//1번플레이어 없을때
+			if (g_Object[0].posX == NULL)		//1번플레이어 없을때
 			{
 				g_Object[0].posX = -0.5f;
 				g_Object[0].posY = 0.f;
@@ -105,6 +131,9 @@ DWORD WINAPI RecvThread(LPVOID arg)
 				g_Object[0].velY = 0.f;
 				g_Object[0].velZ = 0.f;
 				g_Object[0].type = KIND_HERO;
+
+				player1 = true;
+				send(client_sock, (char*)player1, sizeof(player1), 0);
 			}
 			else {								//2번플레이어
 				g_Object[1].posX = 0.5f;
@@ -114,6 +143,9 @@ DWORD WINAPI RecvThread(LPVOID arg)
 				g_Object[1].velY = 0.f;
 				g_Object[1].velZ = 0.f;
 				g_Object[1].type = KIND_HERO;
+
+				player1 = false;
+				send(client_sock, (char*)player1, sizeof(player1), 0);
 			}
 		}
 		else if (initial_data->mass == 0.2f) {		//총알
@@ -140,10 +172,24 @@ DWORD WINAPI SendThread(LPVOID arg)
 	SOCKET client_sock = (SOCKET)arg;
 	SOCKADDR_IN clientaddr;
 	int addrlen;
+	bool both_exist;
+	int len;
+
+	RecvSendData* SendData;
 
 	addrlen = sizeof(client_sock);
 	getpeername(client_sock, (SOCKADDR*)& clientaddr, &addrlen);
 
+	if (g_Object[0].posX != NULL && g_Object[1].posX != NULL) {
+		both_exist = true;
+		send(client_sock, (char*)&both_exist, sizeof(both_exist), 0);
+	}
+
+	len = sizeof(RecvSendData);
+	while(g_Object)
+	ObjectToRS(g_Object[i], *SendData);
+	retval = send(client_sock, (char*)&len, sizeof(int), 0);
+	retval = send(client_sock, (const char*)&SendData, len, 0);
 
 
 	return 0;
@@ -198,9 +244,6 @@ int main(int argc, char* argv[])
 		// 접속한 클라이언트 정보 출력
 		printf("\n[TCP 서버] 클라이언트 접속: IP 주소=%s, 포트 번호=%d\n",inet_ntoa(clientaddr.sin_addr), ntohs(clientaddr.sin_port));
 
-		//InitData
-		
-		//retval = send(client_sock, )
 
 		hThread = CreateThread(NULL, 0, RecvThread, (LPVOID)client_sock, 0, NULL);
 
