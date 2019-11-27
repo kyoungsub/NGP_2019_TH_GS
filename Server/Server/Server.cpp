@@ -17,7 +17,6 @@
 
 Object g_Object[MAX_OBJECTS];
 
-
 // 소켓 함수 오류 출력 후 종료
 void err_quit(const char* msg)
 {
@@ -89,6 +88,10 @@ void RSToObject(Object a, RecvSendData b) {
 	a.idx_num = b.idx_num;
 }
 
+void Update() {
+
+}
+
 //송신 스레드
 DWORD WINAPI RecvThread(LPVOID arg)
 {
@@ -124,25 +127,37 @@ DWORD WINAPI RecvThread(LPVOID arg)
 		if (initial_data->mass == 0.15f) {		//플레이어 데이터
 			if (g_Object[0].posX == NULL)		//1번플레이어 없을때
 			{
-				g_Object[0].posX = -0.5f;
-				g_Object[0].posY = 0.f;
-				g_Object[0].posZ = 0.f;
-				g_Object[0].velX = 0.f;
-				g_Object[0].velY = 0.f;
-				g_Object[0].velZ = 0.f;
-				g_Object[0].type = KIND_HERO;
+				g_Object[HERO_ID].posX = -0.5f;
+				g_Object[HERO_ID].posY = 0.f;
+				g_Object[HERO_ID].posZ = 0.f;
+				g_Object[HERO_ID].velX = 0.f;
+				g_Object[HERO_ID].velY = 0.f;
+				g_Object[HERO_ID].velZ = 0.f;
+				g_Object[HERO_ID].type = KIND_HERO;
+				g_Object[HERO_ID].idx_num = HERO_ID;
+				g_Object[HERO_ID].mass = initial_data->mass;
+				g_Object[HERO_ID].sizeX = initial_data->sizeX;
+				g_Object[HERO_ID].sizeY = initial_data->sizeY;
+				g_Object[HERO_ID].sizeZ = initial_data->sizeZ;
+				g_Object[HERO_ID].coefFriction = initial_data->coef_Frict;
 
 				player1 = true;
 				send(client_sock, (char*)player1, sizeof(player1), 0);
 			}
 			else {								//2번플레이어
-				g_Object[1].posX = 0.5f;
-				g_Object[1].posY = 0.f;
-				g_Object[1].posZ = 0.f;
-				g_Object[1].velX = 0.f;
-				g_Object[1].velY = 0.f;
-				g_Object[1].velZ = 0.f;
-				g_Object[1].type = KIND_HERO;
+				g_Object[HERO_ID2].posX = 0.5f;
+				g_Object[HERO_ID2].posY = 0.f;
+				g_Object[HERO_ID2].posZ = 0.f;
+				g_Object[HERO_ID2].velX = 0.f;
+				g_Object[HERO_ID2].velY = 0.f;
+				g_Object[HERO_ID2].velZ = 0.f;
+				g_Object[HERO_ID2].type = KIND_HERO;
+				g_Object[HERO_ID2].idx_num = HERO_ID2;
+				g_Object[HERO_ID2].mass = initial_data->mass;
+				g_Object[HERO_ID2].sizeX = initial_data->sizeX;
+				g_Object[HERO_ID2].sizeY = initial_data->sizeY;
+				g_Object[HERO_ID2].sizeZ = initial_data->sizeZ;
+				g_Object[HERO_ID2].coefFriction = initial_data->coef_Frict;
 
 				player1 = false;
 				send(client_sock, (char*)player1, sizeof(player1), 0);
@@ -175,7 +190,8 @@ DWORD WINAPI SendThread(LPVOID arg)
 	bool both_exist;
 	int len;
 
-	RecvSendData* SendData;
+	RecvSendData SendData;
+	SendData.idx_num = 0;
 
 	addrlen = sizeof(client_sock);
 	getpeername(client_sock, (SOCKADDR*)& clientaddr, &addrlen);
@@ -185,12 +201,17 @@ DWORD WINAPI SendThread(LPVOID arg)
 		send(client_sock, (char*)&both_exist, sizeof(both_exist), 0);
 	}
 
-	len = sizeof(RecvSendData);
-	while(g_Object)
-	ObjectToRS(g_Object[i], *SendData);
-	retval = send(client_sock, (char*)&len, sizeof(int), 0);
-	retval = send(client_sock, (const char*)&SendData, len, 0);
+	//g_Object에 있는 값을 RecvSendData에 넣어 보낸다.
+	for (int i = 0; i < MAX_OBJECTS; ++i) {
+		if (g_Object[i].posX == NULL)
+			break;
 
+		ObjectToRS(g_Object[i], SendData);
+		len = sizeof(SendData);
+
+		retval = send(client_sock, (char*)& len, sizeof(int), 0);
+		retval = send(client_sock, (char*)& SendData, len, 0);
+	}
 
 	return 0;
 }
@@ -201,8 +222,10 @@ int main(int argc, char* argv[])
 	int retval;
 
 	//initialize boss data
+	//Boss data = g_Object[3]
 	Boss Boss;
 	Boss.InitBoss();
+	g_Object[2] = Boss.BossUnit;
 
 	// 윈속 초기화
 	WSADATA wsa;
@@ -230,7 +253,9 @@ int main(int argc, char* argv[])
 	SOCKET client_sock;
 	SOCKADDR_IN clientaddr;
 	int addrlen;
-	HANDLE hThread;
+
+	HANDLE RecvHandle;
+	HANDLE SendHandle;
 
 	while (1) {
 		// accept()
@@ -245,11 +270,14 @@ int main(int argc, char* argv[])
 		printf("\n[TCP 서버] 클라이언트 접속: IP 주소=%s, 포트 번호=%d\n",inet_ntoa(clientaddr.sin_addr), ntohs(clientaddr.sin_port));
 
 
-		hThread = CreateThread(NULL, 0, RecvThread, (LPVOID)client_sock, 0, NULL);
+		RecvHandle = CreateThread(NULL, 0, RecvThread, (LPVOID)client_sock, 0, NULL);
 
-		hThread = CreateThread(NULL, 0, SendThread, (LPVOID)client_sock, 0, NULL);
-		if (hThread == NULL) closesocket(client_sock);
-		else CloseHandle(hThread);
+		SendHandle = CreateThread(NULL, 0, SendThread, (LPVOID)client_sock, 0, NULL);
+		if (RecvHandle == NULL || SendHandle == NULL) closesocket(client_sock);
+		else {
+			CloseHandle(RecvHandle);
+			CloseHandle(SendHandle);
+		}
 
 	}
 
