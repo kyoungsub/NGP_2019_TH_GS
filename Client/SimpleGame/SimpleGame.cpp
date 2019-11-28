@@ -221,6 +221,13 @@ int main(int argc, char **argv) {
 
 	//-----------------------------------------------------------------------------------//
 	int retval;
+	char ipaddress[16];
+	printf("Input Ip Address:");
+	fgets(ipaddress, sizeof(ipaddress), stdin);
+	if (ipaddress == NULL) {
+		return 1;
+	}
+	//ipaddress[strlen(ipaddress) - 1] = '\0';
 
 	// 윈속 초기화
 	WSADATA wsa;
@@ -235,7 +242,7 @@ int main(int argc, char **argv) {
 	SOCKADDR_IN serveraddr;
 	ZeroMemory(&serveraddr, sizeof(serveraddr));
 	serveraddr.sin_family = AF_INET;
-	serveraddr.sin_addr.s_addr = inet_addr(SERVERIP);
+	serveraddr.sin_addr.s_addr = inet_addr(ipaddress);
 	serveraddr.sin_port = htons(SERVERPORT);
 	retval = connect(g_sock, (SOCKADDR *)&serveraddr, sizeof(serveraddr));
 	if (retval == SOCKET_ERROR) err_quit("connect()");	
