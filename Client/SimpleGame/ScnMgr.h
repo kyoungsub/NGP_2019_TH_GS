@@ -62,5 +62,7 @@ public:
 	void ProcessCollison(int i, int j);	
 
 	void ChangeMap(int kind);
+
+	void RecvDataToObject(recvData rData);
 };
 

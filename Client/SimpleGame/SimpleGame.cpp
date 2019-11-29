@@ -66,6 +66,26 @@ void err_display(char *msg)
 	LocalFree(lpMsgBuf);
 }
 
+// 사용자 정의 데이터 수신 함수
+int recvn(SOCKET s, char* buf, int len, int flags)
+{
+	int received;
+	char* ptr = buf;
+	int left = len;
+
+	while (left > 0) {
+		received = recv(s, ptr, left, flags);
+		if (received == SOCKET_ERROR)
+			return SOCKET_ERROR;
+		else if (received == 0)
+			break;
+		left -= received;
+		ptr += received;
+	}
+
+	return (len - left);
+}
+
 void RenderScene(int temp) {
 
 	// Calc Elapsed Time
@@ -119,13 +139,13 @@ void RenderScene(int temp) {
 	glutSwapBuffers();
 
 	// 파일 데이터 전송에 사용할 변수
-	char buf[BUFSIZE];
 	int curread;
 	int curtotal = 0;
 	int len;
 
 	// player 1 Send Data
 	sendData sData;
+	recvData rData;
 
 	g_ScnMgr->m_Objects[HERO_ID]->GetPos(&sData.posX, &sData.posY, &sData.posZ);
 	g_ScnMgr->m_Objects[HERO_ID]->GetVel(&sData.VelX, &sData.VelY, &sData.VelZ);
@@ -135,6 +155,14 @@ void RenderScene(int temp) {
 	len = sizeof(sData);
 	send(g_sock, (char*)&len, sizeof(int), 0);
 	send(g_sock, (const char*)&sData, len, 0);
+
+	//data 받기
+	for (int i = 0; i < MAX_OBJECTS; ++i) {
+		recvn(g_sock, (char *)& len, sizeof(int), 0);
+		recvn(g_sock, (char *)&rData, len, 0);
+
+		g_ScnMgr->RecvDataToObject(rData);
+	}
 
 	glutTimerFunc(16, RenderScene, 0);
 }
