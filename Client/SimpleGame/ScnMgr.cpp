@@ -58,6 +58,7 @@ ScnMgr::ScnMgr()
 	m_DeathTexture = m_Renderer->CreatePngTexture("./textures/deathposter.png");
 	m_BossDoorTexture = m_Renderer->CreatePngTexture("./textures/BossDoor.png");
 
+	/*
 	// Creat Hero Object
 	m_Objects[HERO_ID] = new Object();
 	m_Objects[HERO_ID]->SetPos(0.0f, 0.0f, 0.0f);
@@ -76,6 +77,8 @@ ScnMgr::ScnMgr()
 
 	// Creat BossDoor Object
 	AddObject(0.0f, 1.35f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, KIND_BOSS_DOOR, 100, STATE_GROUND);
+
+	*/
 
 	// Creat HP UI
 	m_HP[0] = new UI();
@@ -518,6 +521,21 @@ void ScnMgr::DeleteUI(int id)
 		delete m_HP[id];
 		m_HP[id] = NULL;
 	}
+}
+
+void ScnMgr::AddPlayer(float x, float y, float z, float vx, float vy, float vz) {
+	// Creat Hero Object
+	m_Objects[HERO_ID] = new Object();
+	m_Objects[HERO_ID]->SetPos(x, y, z);
+	m_Objects[HERO_ID]->SetVel(0.f, 0.f, 0.f);
+	m_Objects[HERO_ID]->SetAcc(0.0f, 0.0f, 0.0f);
+	m_Objects[HERO_ID]->SetSize(0.6f, 0.6f, 0.6f);
+	m_Objects[HERO_ID]->SetMass(0.15f);
+	m_Objects[HERO_ID]->SetCoefFrict(0.5f);
+	m_Objects[HERO_ID]->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+	m_Objects[HERO_ID]->SetKind(KIND_HERO);
+	m_Objects[HERO_ID]->SetHP(240);
+	m_Objects[HERO_ID]->SetState(STATE_GROUND);
 }
 
 int ScnMgr::FindEmptyObjectSlot()

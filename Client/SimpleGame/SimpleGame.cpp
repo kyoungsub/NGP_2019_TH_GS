@@ -160,6 +160,11 @@ void RenderScene(int temp) {
 	//data 받기
 	recvn(g_sock, (char *)& len, sizeof(int), 0);
 	recvn(g_sock, (char *)&rData, len, 0);
+	int i = 0;
+	//if (i == 0) {
+		//g_ScnMgr->AddPlayer(rData.posX, rData.posY, rData.posZ, rData.VelX, rData.VelY, rData.VelZ);
+		//++i;
+	//}
 
 	g_ScnMgr->RecvDataToObject(rData);
 
@@ -324,6 +329,14 @@ int main(int argc, char **argv) {
 	len = sizeof(iData);
 	send(g_sock, (char*)&len, sizeof(int), 0);
 	send(g_sock, (const char*)&iData, len, 0);
+
+	// player data recv (수정 해야함)
+	recvData rData;
+
+	recvn(g_sock, (char *)& len, sizeof(int), 0);
+	recvn(g_sock, (char *)&rData, len, 0);
+
+	g_ScnMgr->AddPlayer(rData.posX, rData.posY, rData.posZ, rData.VelX, rData.VelY, rData.VelZ);
 
 	g_PrevTime = glutGet(GLUT_ELAPSED_TIME);
 	glutTimerFunc(16, RenderScene, 0);
