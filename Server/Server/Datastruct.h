@@ -64,4 +64,6 @@ struct Object
 	float elapsed_time;	//경과시간
 	int HP;				//체력
 	int State;			//생사여부
+
+	bool updated = false;		//갱신여부
 };

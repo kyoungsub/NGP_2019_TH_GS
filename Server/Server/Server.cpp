@@ -148,6 +148,7 @@ DWORD WINAPI RecvThread(LPVOID arg)
 				g_Object[HERO_ID].sizeY = initial_data->sizeY;
 				g_Object[HERO_ID].sizeZ = initial_data->sizeZ;
 				g_Object[HERO_ID].coefFriction = initial_data->coef_Frict;
+				g_Object[HERO_ID].updated = true;
 
 				send(client_sock, (char*)player1, sizeof(player1), 0);
 				player1 = false;
@@ -166,6 +167,7 @@ DWORD WINAPI RecvThread(LPVOID arg)
 				g_Object[HERO_ID2].sizeY = initial_data->sizeY;
 				g_Object[HERO_ID2].sizeZ = initial_data->sizeZ;
 				g_Object[HERO_ID2].coefFriction = initial_data->coef_Frict;
+				g_Object[HERO_ID].updated = true;
 
 				send(client_sock, (char*)player1, sizeof(player1), 0);
 			}
@@ -214,17 +216,21 @@ DWORD WINAPI SendThread(LPVOID arg)
 
 		//g_Object에 있는 값을 RecvSendData에 넣어 보낸다.
 		for (int i = 0; i < MAX_OBJECTS; ++i) {
-			ObjectToRS(g_Object[i], &SendData);
-			len = sizeof(SendData);
+			if (g_Object[i].updated == true) {
+				ObjectToRS(g_Object[i], &SendData);
+				len = sizeof(SendData);
 
-			retval = send(client_sock, (char*)& len, sizeof(int), 0);
-			retval = send(client_sock, (char*)& SendData, len, 0);
+				retval = send(client_sock, (char*)& len, sizeof(int), 0);
+				retval = send(client_sock, (char*)& SendData, len, 0);
 
-			//디버깅용 출력코드
-			printf("Pos : %f %f %f, Vel : %f %f %f, type: %d, idx_num : %d\n",
-				SendData.posX, SendData.posY, SendData.posZ,
-				SendData.VelX, SendData.VelY, SendData.VelZ,
-				SendData.type, SendData.idx_num);
+				g_Object[i].updated = false;
+
+				//디버깅용 출력코드
+				printf("Pos : %f %f %f, Vel : %f %f %f, type: %d, idx_num : %d\n",
+					SendData.posX, SendData.posY, SendData.posZ,
+					SendData.VelX, SendData.VelY, SendData.VelZ,
+					SendData.type, SendData.idx_num);
+			}
 		}
 
 		SetEvent(wait_Send);
