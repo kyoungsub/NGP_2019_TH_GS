@@ -132,6 +132,26 @@ void RenderScene(int temp) {
 	g_ScnMgr->RenderScene();   // Render   
 	if (ShootElapsedTime % 50 == 0) { // Shoot
 		g_ScnMgr->Shoot(g_Shoot);
+
+		sendData sData;
+		int len;
+		int kind;
+		
+		for (int i = 0; i < MAX_OBJECTS; ++i) {
+			if (g_ScnMgr->m_Objects[i] != NULL) {
+				g_ScnMgr->m_Objects[i]->GetKind(&kind);
+				if (kind == KIND_BULLET) {
+					g_ScnMgr->m_Objects[i]->GetPos(&sData.posX, &sData.posY, &sData.posZ);
+					g_ScnMgr->m_Objects[i]->GetVel(&sData.VelX, &sData.VelY, &sData.VelZ);
+					g_ScnMgr->m_Objects[i]->GetKind(&sData.type);
+					sData.idx_num = i;
+
+					len = sizeof(sData);
+					send(g_sock, (char*)&len, sizeof(int), 0);
+					send(g_sock, (const char*)&sData, len, 0);
+				}
+			}
+		}
 	}
 	g_ScnMgr->GarbageCollector();   // 화면 밖으로 나가는 오브젝트 삭제
 	g_ScnMgr->DoCollisionTest();
@@ -160,11 +180,6 @@ void RenderScene(int temp) {
 	//data 받기
 	recvn(g_sock, (char *)& len, sizeof(int), 0);
 	recvn(g_sock, (char *)&rData, len, 0);
-	int i = 0;
-	//if (i == 0) {
-		//g_ScnMgr->AddPlayer(rData.posX, rData.posY, rData.posZ, rData.VelX, rData.VelY, rData.VelZ);
-		//++i;
-	//}
 
 	g_ScnMgr->RecvDataToObject(rData);
 
@@ -263,8 +278,8 @@ int main(int argc, char **argv) {
 
 	// 윈속 초기화
 	WSADATA wsa;
-	if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0);
-	//return 1;
+	if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0)
+		return 1;
 
 	// socket()
 	g_sock = socket(AF_INET, SOCK_STREAM, 0);

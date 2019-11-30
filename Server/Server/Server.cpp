@@ -173,12 +173,20 @@ DWORD WINAPI RecvThread(LPVOID arg)
 			}
 		}
 		else if (initial_data->mass == 0.2f) {		//총알
-
+			g_Object[RS_data->idx_num].posX = RS_data->posX;
+			g_Object[RS_data->idx_num].posY = RS_data->posY;
+			g_Object[RS_data->idx_num].posZ = RS_data->posZ;
+			g_Object[RS_data->idx_num].velX = RS_data->VelX;
+			g_Object[RS_data->idx_num].velY = RS_data->VelY;
+			g_Object[RS_data->idx_num].velZ = RS_data->VelZ;
+			g_Object[RS_data->idx_num].type = RS_data->type;
 		}
 
 		if (len == sizeof(RecvSendData)) {
 			RS_data = (RecvSendData*)&buf;
 			RSToObject(&g_Object[0], RS_data);
+
+			g_Object[RS_data->idx_num].updated = true;
 
 			//디버깅용 출력코드
 			printf("Pos : %f %f %f, Vel : %f %f %f, type: %d, idx_num : %d\n",

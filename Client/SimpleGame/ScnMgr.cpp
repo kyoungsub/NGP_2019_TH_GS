@@ -828,7 +828,4 @@ void ScnMgr::RecvDataToObject(recvData rData) {
 	m_Objects[rData.idx_num]->SetPos(rData.posX, rData.posY, rData.posZ);
 	m_Objects[rData.idx_num]->SetVel(rData.VelX, rData.VelY, rData.VelZ);
 	m_Objects[rData.idx_num]->SetKind(rData.type);
-
-	printf("Pos : %f %f %f vel : %f %f %f kind: %d, idx: %d \n",
-		rData.posX, rData.posY, rData.posZ, rData.VelX, rData.VelY, rData.VelZ, rData.type, rData.idx_num);
 }
