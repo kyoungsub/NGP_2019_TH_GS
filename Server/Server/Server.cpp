@@ -172,21 +172,24 @@ DWORD WINAPI RecvThread(LPVOID arg)
 				send(client_sock, (char*)player1, sizeof(player1), 0);
 			}
 		}
-		else if (initial_data->mass == 0.2f) {		//총알
-			g_Object[RS_data->idx_num].posX = RS_data->posX;
-			g_Object[RS_data->idx_num].posY = RS_data->posY;
-			g_Object[RS_data->idx_num].posZ = RS_data->posZ;
-			g_Object[RS_data->idx_num].velX = RS_data->VelX;
-			g_Object[RS_data->idx_num].velY = RS_data->VelY;
-			g_Object[RS_data->idx_num].velZ = RS_data->VelZ;
-			g_Object[RS_data->idx_num].type = RS_data->type;
-		}
 
 		if (len == sizeof(RecvSendData)) {
 			RS_data = (RecvSendData*)&buf;
-			RSToObject(&g_Object[0], RS_data);
+			RSToObject(&g_Object[RS_data->idx_num], RS_data);
 
-			g_Object[RS_data->idx_num].updated = true;
+			if (RS_data->type == KIND_BULLET) {
+				g_Object[RS_data->idx_num].mass = 0.2f;
+				g_Object[RS_data->idx_num].coefFriction = 5.0f;
+				g_Object[RS_data->idx_num].sizeX = 0.75f;
+				g_Object[RS_data->idx_num].sizeY = 0.75f;
+				g_Object[RS_data->idx_num].sizeZ = 0.75f;
+
+				if (RS_data->VelX == 0.f  && RS_data->VelY == 0.f) {
+					g_Object[RS_data->idx_num].updated = false;
+				}
+			}
+			else
+				g_Object[RS_data->idx_num].updated = true;
 
 			//디버깅용 출력코드
 			printf("Pos : %f %f %f, Vel : %f %f %f, type: %d, idx_num : %d\n",
@@ -226,7 +229,7 @@ DWORD WINAPI SendThread(LPVOID arg)
 
 		//g_Object에 있는 값을 RecvSendData에 넣어 보낸다.
 		for (int i = 0; i < MAX_OBJECTS; ++i) {
-			if (g_Object[i].updated == true || i == 0) {
+			if (g_Object[i].updated == true) {
 				ObjectToRS(g_Object[i], &SendData);
 				len = sizeof(SendData);
 
