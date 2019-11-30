@@ -142,6 +142,7 @@ void RenderScene(int temp) {
 	int curread;
 	int curtotal = 0;
 	int len;
+	int retval;
 
 	// player 1 Send Data
 	sendData sData;
@@ -157,12 +158,10 @@ void RenderScene(int temp) {
 	send(g_sock, (const char*)&sData, len, 0);
 
 	//data ¹Þ±â
-	for (int i = 0; i < MAX_OBJECTS; ++i) {
-		recvn(g_sock, (char *)& len, sizeof(int), 0);
-		recvn(g_sock, (char *)&rData, len, 0);
+	recvn(g_sock, (char *)& len, sizeof(int), 0);
+	recvn(g_sock, (char *)&rData, len, 0);
 
-		g_ScnMgr->RecvDataToObject(rData);
-	}
+	g_ScnMgr->RecvDataToObject(rData);
 
 	glutTimerFunc(16, RenderScene, 0);
 }

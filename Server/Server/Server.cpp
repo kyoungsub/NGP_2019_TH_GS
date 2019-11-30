@@ -84,15 +84,15 @@ void ObjectToRS(Object a, RecvSendData* b) {
 }
 
 //RSData를 Object로 변환
-void RSToObject(Object a, RecvSendData* b) {
-	a.posX = b->posX;
-	a.posY = b->posY;
-	a.posZ = b->posZ;
-	a.velX = b->VelX;
-	a.velY = b->VelY;
-	a.velZ = b->VelZ;
-	a.type = b->type;
-	a.idx_num = b->idx_num;
+void RSToObject(Object* a, RecvSendData* b) {
+	a->posX = b->posX;
+	a->posY = b->posY;
+	a->posZ = b->posZ;
+	a->velX = b->VelX;
+	a->velY = b->VelY;
+	a->velZ = b->VelZ;
+	a->type = b->type;
+	a->idx_num = b->idx_num;
 }
 
 void Update() {
@@ -109,7 +109,7 @@ DWORD WINAPI RecvThread(LPVOID arg)
 	int len;
 	char buf[BUFSIZE];
 	InitData* initial_data = nullptr;
-	RecvSendData* RS_data;
+	RecvSendData* RS_data = nullptr;
 
 	addrlen = sizeof(client_sock);
 	getpeername(client_sock, (SOCKADDR*)& clientaddr, &addrlen);
@@ -178,11 +178,13 @@ DWORD WINAPI RecvThread(LPVOID arg)
 
 		if (len == sizeof(RecvSendData)) {
 			RS_data = (RecvSendData*)&buf;
+			RSToObject(&g_Object[0], RS_data);
+
 			//디버깅용 출력코드
-			//printf("Pos : %f %f %f, Vel : %f %f %f, type: %d, idx_num : %d\n",
-			//	RS_data->posX, RS_data->posY, RS_data->posZ,
-			//	RS_data->VelX, RS_data->VelY, RS_data->VelZ,
-			//	RS_data->type, RS_data->idx_num);
+			printf("Pos : %f %f %f, Vel : %f %f %f, type: %d, idx_num : %d\n",
+				RS_data->posX, RS_data->posY, RS_data->posZ,
+				RS_data->VelX, RS_data->VelY, RS_data->VelZ,
+				RS_data->type, RS_data->idx_num);
 		}
 
 		SetEvent(wait_Recv);
@@ -216,7 +218,7 @@ DWORD WINAPI SendThread(LPVOID arg)
 
 		//g_Object에 있는 값을 RecvSendData에 넣어 보낸다.
 		for (int i = 0; i < MAX_OBJECTS; ++i) {
-			if (g_Object[i].updated == true) {
+			if (g_Object[i].updated == true || i == 0) {
 				ObjectToRS(g_Object[i], &SendData);
 				len = sizeof(SendData);
 
@@ -226,10 +228,10 @@ DWORD WINAPI SendThread(LPVOID arg)
 				g_Object[i].updated = false;
 
 				//디버깅용 출력코드
-				printf("Pos : %f %f %f, Vel : %f %f %f, type: %d, idx_num : %d\n",
-					SendData.posX, SendData.posY, SendData.posZ,
-					SendData.VelX, SendData.VelY, SendData.VelZ,
-					SendData.type, SendData.idx_num);
+				//printf("Pos : %f %f %f, Vel : %f %f %f, type: %d, idx_num : %d\n",
+				//	SendData.posX, SendData.posY, SendData.posZ,
+				//	SendData.VelX, SendData.VelY, SendData.VelZ,
+				//	SendData.type, SendData.idx_num);
 			}
 		}
 
