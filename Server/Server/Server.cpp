@@ -18,18 +18,13 @@
 Object g_Object[MAX_OBJECTS];
 int player1 = 0;		//1P = 0, 2P = 1의 값을 받음
 int player1RID;
-int player1SID;
-
 int player2RID;
-int player2SID;
 
-
-
-HANDLE RecvHandle[2];
-HANDLE SendHandle[2];
+HANDLE recvsendHandle[2];
+HANDLE gameLogicHandle;
 
 HANDLE wait_Recv[2];
-HANDLE wait_Send[2];
+HANDLE wait_Send;
 
 // 소켓 함수 오류 출력 후 종료
 void err_quit(const char* msg)
@@ -102,12 +97,8 @@ void RSToObject(Object* a, RecvSendData* b) {
 	a->idx_num = b->idx_num;
 }
 
-void Update() {
-
-}
-
 //송신 스레드
-DWORD WINAPI RecvThread(LPVOID arg)
+DWORD WINAPI RecvSendThread(LPVOID arg)
 {
 	int retval;
 	SOCKET client_sock = (SOCKET)arg;
@@ -117,13 +108,13 @@ DWORD WINAPI RecvThread(LPVOID arg)
 	char buf[BUFSIZE];
 	InitData* initial_data = nullptr;
 	RecvSendData* RS_data = nullptr;
+	RecvSendData SendData;
+	SendData.idx_num = 0;
 
 	addrlen = sizeof(client_sock);
 	getpeername(client_sock, (SOCKADDR*)& clientaddr, &addrlen);
 	
 	while (1) {
-		WaitForMultipleObjects(2, wait_Send, TRUE, INFINITE);
-
 		//data 받기
 		retval = recvn(client_sock, (char *)& len, sizeof(int), 0);
 		//if (retval == SOCKET_ERROR) err_display("recv()");
@@ -134,9 +125,8 @@ DWORD WINAPI RecvThread(LPVOID arg)
 		if (len == sizeof(InitData)) {
 			initial_data = (InitData*)&buf;
 			//디버깅용 출력코드
-			printf("%d mass : %f, size : %f %f %f, coef_frict : %f \n", i,
+			printf("mass : %f, size : %f %f %f, coef_frict : %f \n",
 				initial_data->mass, initial_data->sizeX, initial_data->sizeY, initial_data->sizeZ, initial_data->coef_Frict);
-			i++;
 		}
 
 		if (initial_data->mass == 0.15f) {		//플레이어 데이터
@@ -215,33 +205,21 @@ DWORD WINAPI RecvThread(LPVOID arg)
 			SetEvent(wait_Recv[0]);
 		else if (GetCurrentThreadId() == player2RID)
 			SetEvent(wait_Recv[1]);
-	}
 
-	return 0;
-}
 
-DWORD WINAPI SendThread(LPVOID arg)
-{
-	int retval;
-	SOCKET client_sock = (SOCKET)arg;
-	SOCKADDR_IN clientaddr;
-	int addrlen;
-	bool both_exist;
-	int len;
+		/////////////////////////////SEND
+		if(player1 == 2)
+			WaitForSingleObject(wait_Send, INFINITE);
 
-	RecvSendData SendData;
-	SendData.idx_num = 0;
-
-	addrlen = sizeof(client_sock);
-	getpeername(client_sock, (SOCKADDR*)& clientaddr, &addrlen);
-	while (1) {
-		WaitForMultipleObjects(2, wait_Recv, TRUE, INFINITE);
-
+		
 		//g_Object에 있는 값을 RecvSendData에 넣어 보낸다.
-		if (player2SID == GetCurrentThreadId()) {
-			Object temp = g_Object[HERO_ID];
-			g_Object[HERO_ID] = g_Object[HERO_ID2];
-			g_Object[HERO_ID2] = temp;
+		if (player2RID == GetCurrentThreadId()) {
+			Object temp = g_Object[HERO_ID2];
+			g_Object[HERO_ID2] = g_Object[HERO_ID];
+			g_Object[HERO_ID] = temp;
+
+			g_Object[HERO_ID].idx_num = HERO_ID;
+			g_Object[HERO_ID2].idx_num = HERO_ID2;
 		}
 
 		for (int i = 0; i < MAX_OBJECTS; ++i) {
@@ -256,16 +234,38 @@ DWORD WINAPI SendThread(LPVOID arg)
 				g_Object[i].updated = false;
 
 				//디버깅용 출력코드
-				//printf("Pos : %f %f %f, Vel : %f %f %f, type: %d, idx_num : %d\n",
-				//	SendData.posX, SendData.posY, SendData.posZ,
-				//	SendData.VelX, SendData.VelY, SendData.VelZ,
-				//	SendData.type, SendData.idx_num);
+				printf("(%d) Pos : %f %f %f, Vel : %f %f %f, type: %d, idx_num : %d\n", GetCurrentThreadId(),
+					SendData.posX, SendData.posY, SendData.posZ,
+					SendData.VelX, SendData.VelY, SendData.VelZ,
+					SendData.type, SendData.idx_num);
 			}
 		}
-		if (GetCurrentThreadId() == player1SID)
-			SetEvent(wait_Send[0]);
-		else if (GetCurrentThreadId() == player2SID)
-			SetEvent(wait_Send[1]);
+		
+
+
+	}
+
+	return 0;
+}
+
+DWORD WINAPI GameLogicThread(LPVOID arg)
+{
+	//initialize boss data
+	//Boss data = g_Object[3]
+	Boss Boss;
+	Boss.InitBoss();
+	g_Object[3] = Boss.BossUnit;
+	for (int i = 0; i < MAX_OBJECTS; ++i)
+		g_Object[i].idx_num = i;
+	
+	//보스갱신및 충돌체크
+	while (1) {
+		//Recv가 끝나면 시작
+		WaitForMultipleObjects(2, wait_Recv, TRUE, INFINITE);
+
+
+		//종료시 Send 시작
+		SetEvent(wait_Send);
 	}
 
 	return 0;
@@ -275,15 +275,6 @@ DWORD WINAPI SendThread(LPVOID arg)
 int main(int argc, char* argv[])
 {
 	int retval;
-
-	//initialize boss data
-	//Boss data = g_Object[3]
-	Boss Boss;
-	Boss.InitBoss();
-	g_Object[3] = Boss.BossUnit;
-	for (int i = 0; i < MAX_OBJECTS; ++i)
-		g_Object[i].idx_num = i;
-
 
 	// 윈속 초기화
 	WSADATA wsa;
@@ -312,11 +303,12 @@ int main(int argc, char* argv[])
 	SOCKADDR_IN clientaddr;
 	int addrlen;
 
+	gameLogicHandle = CreateThread(NULL, 0, GameLogicThread, NULL, 0, NULL);
+
 	wait_Recv[0] = CreateEvent(NULL, FALSE, FALSE, NULL);
 	wait_Recv[1] = CreateEvent(NULL, FALSE, FALSE, NULL);
 
-	wait_Send[0] = CreateEvent(NULL, FALSE, TRUE, NULL);
-	wait_Send[1] = CreateEvent(NULL, FALSE, TRUE, NULL);
+	wait_Send = CreateEvent(NULL, FALSE, FALSE, NULL);
 
 	while (1) {
 		// accept()
@@ -331,12 +323,10 @@ int main(int argc, char* argv[])
 		printf("\n[TCP 서버] 클라이언트 접속: IP 주소=%s, 포트 번호=%d\n",inet_ntoa(clientaddr.sin_addr), ntohs(clientaddr.sin_port));
 
 		if (player1 == 0) {
-			RecvHandle[0] = CreateThread(NULL, 0, RecvThread, (LPVOID)client_sock, 0, NULL);
-			SendHandle[0] = CreateThread(NULL, 0, SendThread, (LPVOID)client_sock, 0, NULL);
+			recvsendHandle[0] = CreateThread(NULL, 0, RecvSendThread, (LPVOID)client_sock, 0, NULL);
 		}
 		else if (player1 == 1) {
-			RecvHandle[1] = CreateThread(NULL, 0, RecvThread, (LPVOID)client_sock, 0, NULL);
-			SendHandle[1] = CreateThread(NULL, 0, SendThread, (LPVOID)client_sock, 0, NULL);
+			recvsendHandle[1] = CreateThread(NULL, 0, RecvSendThread, (LPVOID)client_sock, 0, NULL);
 		}
 
 
