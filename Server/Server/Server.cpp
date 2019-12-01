@@ -16,7 +16,7 @@
 #define BUFSIZE 1024
 
 Object g_Object[MAX_OBJECTS];
-int player1 = 1;
+int player1 = 0;
 
 HANDLE RecvHandle[2];
 HANDLE SendHandle;
@@ -150,7 +150,7 @@ DWORD WINAPI RecvThread(LPVOID arg)
 				g_Object[HERO_ID].coefFriction = initial_data->coef_Frict;
 				g_Object[HERO_ID].updated = true;
 
-				//send(client_sock, (char*)player1, sizeof(player1), 0);
+				send(client_sock, (char*)player1, sizeof(player1), 0);
 				player1 = 1;
 			}
 			else if(player1 == 1){								//2번플레이어
@@ -169,7 +169,7 @@ DWORD WINAPI RecvThread(LPVOID arg)
 				g_Object[HERO_ID2].coefFriction = initial_data->coef_Frict;
 				g_Object[HERO_ID2].updated = true;
 
-				//send(client_sock, (char*)player1, sizeof(player1), 0);
+				send(client_sock, (char*)player1, sizeof(player1), 0);
 				player1 = 2;
 			}
 		}
@@ -317,7 +317,7 @@ int main(int argc, char* argv[])
 		}
 
 		SendHandle = CreateThread(NULL, 0, SendThread, (LPVOID)client_sock, 0, NULL);
-		if (RecvHandle[0] == NULL || RecvHandle[1] == NULL || SendHandle == NULL) closesocket(client_sock);
+		if (SendHandle == NULL) closesocket(client_sock);
 		else {
 			CloseHandle(RecvHandle[0]);
 			CloseHandle(RecvHandle[1]);
