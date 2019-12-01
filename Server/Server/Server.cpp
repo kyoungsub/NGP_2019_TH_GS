@@ -17,7 +17,7 @@
 
 Object g_Object[MAX_OBJECTS];
 int player1 = 0;		//1P = 0, 2P = 1의 값을 받음
-int player2ID;
+u_short player2Port;
 
 
 HANDLE RecvHandle[2];
@@ -171,14 +171,13 @@ DWORD WINAPI RecvThread(LPVOID arg)
 				g_Object[HERO_ID2].updated = true;
 
 				player1 = 2;
-				player2ID = GetCurrentThreadId();
 			}
 		}
 
 		if (len == sizeof(RecvSendData)) {
 			RS_data = (RecvSendData*)&buf;
 			if (RS_data->type == KIND_HERO) {
-				if (player2ID == GetCurrentThreadId()) {
+				if (player2Port == ntohs(clientaddr.sin_port)) {
 					RS_data->idx_num = HERO_ID2;
 				}
 			}
@@ -225,18 +224,19 @@ DWORD WINAPI SendThread(LPVOID arg)
 
 	addrlen = sizeof(client_sock);
 	getpeername(client_sock, (SOCKADDR*)& clientaddr, &addrlen);
-
-	//if (player1 == 2) {
-	//	send(client_sock, (char*)&both_exist, sizeof(both_exist), 0);
-	//	player1 = 3;
-	//}
-
 	while (1) {
 		WaitForSingleObject(wait_Recv, INFINITE);
 
 		//g_Object에 있는 값을 RecvSendData에 넣어 보낸다.
+		if (player2Port == ntohs(clientaddr.sin_port)) {
+			Object temp = g_Object[HERO_ID];
+			g_Object[HERO_ID] = g_Object[HERO_ID2];
+			g_Object[HERO_ID2] = temp;
+		}
+
 		for (int i = 0; i < MAX_OBJECTS; ++i) {
 			if (g_Object[i].updated == true) {
+
 				ObjectToRS(g_Object[i], &SendData);
 				len = sizeof(SendData);
 
@@ -320,9 +320,12 @@ int main(int argc, char* argv[])
 		}
 		else if (player1 == 1) {
 			RecvHandle[1] = CreateThread(NULL, 0, RecvThread, (LPVOID)client_sock, 0, NULL);
+			player2Port = ntohs(clientaddr.sin_port);
 		}
 
 		SendHandle = CreateThread(NULL, 0, SendThread, (LPVOID)client_sock, 0, NULL);
+
+
 		if (SendHandle == NULL) closesocket(client_sock);
 		else {
 			CloseHandle(RecvHandle[0]);
