@@ -40,6 +40,7 @@ private:
 public:
 
 	Object *m_Objects[MAX_OBJECTS];
+	BOOL player1;
 
 	ScnMgr();
 	~ScnMgr();

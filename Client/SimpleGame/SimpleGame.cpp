@@ -173,6 +173,8 @@ void RenderScene(int temp) {
 	g_ScnMgr->m_Objects[HERO_ID]->GetKind(&sData.type);
 	sData.idx_num = HERO_ID;
 
+	
+
 	len = sizeof(sData);
 	send(g_sock, (char*)&len, sizeof(int), 0);
 	send(g_sock, (const char*)&sData, len, 0);

@@ -525,17 +525,59 @@ void ScnMgr::DeleteUI(int id)
 
 void ScnMgr::AddPlayer(float x, float y, float z, float vx, float vy, float vz) {
 	// Creat Hero Object
-	m_Objects[HERO_ID] = new Object();
-	m_Objects[HERO_ID]->SetPos(x, y, z);
-	m_Objects[HERO_ID]->SetVel(0.f, 0.f, 0.f);
-	m_Objects[HERO_ID]->SetAcc(0.0f, 0.0f, 0.0f);
-	m_Objects[HERO_ID]->SetSize(0.6f, 0.6f, 0.6f);
-	m_Objects[HERO_ID]->SetMass(0.15f);
-	m_Objects[HERO_ID]->SetCoefFrict(0.5f);
-	m_Objects[HERO_ID]->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
-	m_Objects[HERO_ID]->SetKind(KIND_HERO);
-	m_Objects[HERO_ID]->SetHP(240);
-	m_Objects[HERO_ID]->SetState(STATE_GROUND);
+
+	if (x == -0.5f) {
+		player1 = TRUE;
+		m_Objects[HERO_ID] = new Object();
+		m_Objects[HERO_ID]->SetPos(x, y, z);
+		m_Objects[HERO_ID]->SetVel(0.f, 0.f, 0.f);
+		m_Objects[HERO_ID]->SetAcc(0.0f, 0.0f, 0.0f);
+		m_Objects[HERO_ID]->SetSize(0.6f, 0.6f, 0.6f);
+		m_Objects[HERO_ID]->SetMass(0.15f);
+		m_Objects[HERO_ID]->SetCoefFrict(0.5f);
+		m_Objects[HERO_ID]->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+		m_Objects[HERO_ID]->SetKind(KIND_HERO);
+		m_Objects[HERO_ID]->SetHP(240);
+		m_Objects[HERO_ID]->SetState(STATE_GROUND);
+
+		m_Objects[HERO_ID2] = new Object();
+		m_Objects[HERO_ID2]->SetPos(-x, -y, -z);
+		m_Objects[HERO_ID2]->SetVel(0.f, 0.f, 0.f);
+		m_Objects[HERO_ID2]->SetAcc(0.0f, 0.0f, 0.0f);
+		m_Objects[HERO_ID2]->SetSize(0.6f, 0.6f, 0.6f);
+		m_Objects[HERO_ID2]->SetMass(0.15f);
+		m_Objects[HERO_ID2]->SetCoefFrict(0.5f);
+		m_Objects[HERO_ID2]->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+		m_Objects[HERO_ID2]->SetKind(KIND_HERO);
+		m_Objects[HERO_ID2]->SetHP(240);
+		m_Objects[HERO_ID2]->SetState(STATE_GROUND);
+	}
+	else if (x == 0.5f) {
+		player1 = FALSE;
+		m_Objects[HERO_ID] = new Object();
+		m_Objects[HERO_ID]->SetPos(x, y, z);
+		m_Objects[HERO_ID]->SetVel(0.f, 0.f, 0.f);
+		m_Objects[HERO_ID]->SetAcc(0.0f, 0.0f, 0.0f);
+		m_Objects[HERO_ID]->SetSize(0.6f, 0.6f, 0.6f);
+		m_Objects[HERO_ID]->SetMass(0.15f);
+		m_Objects[HERO_ID]->SetCoefFrict(0.5f);
+		m_Objects[HERO_ID]->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+		m_Objects[HERO_ID]->SetKind(KIND_HERO);
+		m_Objects[HERO_ID]->SetHP(240);
+		m_Objects[HERO_ID]->SetState(STATE_GROUND);
+
+		m_Objects[HERO_ID2] = new Object();
+		m_Objects[HERO_ID2]->SetPos(-x, -y, -z);
+		m_Objects[HERO_ID2]->SetVel(0.f, 0.f, 0.f);
+		m_Objects[HERO_ID2]->SetAcc(0.0f, 0.0f, 0.0f);
+		m_Objects[HERO_ID2]->SetSize(0.6f, 0.6f, 0.6f);
+		m_Objects[HERO_ID2]->SetMass(0.15f);
+		m_Objects[HERO_ID2]->SetCoefFrict(0.5f);
+		m_Objects[HERO_ID2]->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+		m_Objects[HERO_ID2]->SetKind(KIND_HERO);
+		m_Objects[HERO_ID2]->SetHP(240);
+		m_Objects[HERO_ID2]->SetState(STATE_GROUND);
+	}
 }
 
 int ScnMgr::FindEmptyObjectSlot()
@@ -828,4 +870,10 @@ void ScnMgr::RecvDataToObject(recvData rData) {
 	m_Objects[rData.idx_num]->SetPos(rData.posX, rData.posY, rData.posZ);
 	m_Objects[rData.idx_num]->SetVel(rData.VelX, rData.VelY, rData.VelZ);
 	m_Objects[rData.idx_num]->SetKind(rData.type);
+
+	//디버깅용 출력코드
+	printf("Pos : %f %f %f, Vel : %f %f %f, type: %d, idx_num : %d\n",
+		rData.posX, rData.posY, rData.posZ,
+		rData.VelX, rData.VelY, rData.VelZ,
+		rData.type, rData.idx_num);
 }
