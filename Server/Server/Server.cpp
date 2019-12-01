@@ -17,14 +17,19 @@
 
 Object g_Object[MAX_OBJECTS];
 int player1 = 0;		//1P = 0, 2P = 1의 값을 받음
-u_short player2Port;
+int player1RID;
+int player1SID;
+
+int player2RID;
+int player2SID;
+
 
 
 HANDLE RecvHandle[2];
-HANDLE SendHandle;
+HANDLE SendHandle[2];
 
-HANDLE wait_Recv;
-HANDLE wait_Send;
+HANDLE wait_Recv[2];
+HANDLE wait_Send[2];
 
 // 소켓 함수 오류 출력 후 종료
 void err_quit(const char* msg)
@@ -117,7 +122,7 @@ DWORD WINAPI RecvThread(LPVOID arg)
 	getpeername(client_sock, (SOCKADDR*)& clientaddr, &addrlen);
 	
 	while (1) {
-		WaitForSingleObject(wait_Send, INFINITE);
+		WaitForMultipleObjects(2, wait_Send, TRUE, INFINITE);
 
 		//data 받기
 		retval = recvn(client_sock, (char *)& len, sizeof(int), 0);
@@ -152,7 +157,8 @@ DWORD WINAPI RecvThread(LPVOID arg)
 				g_Object[HERO_ID].coefFriction = initial_data->coef_Frict;
 				g_Object[HERO_ID].updated = true;
 
-				player1 = 1;
+				player1RID = GetCurrentThreadId();
+				player1 += 1;
 			}
 			else if(player1 == 1){								//2번플레이어
 				g_Object[HERO_ID2].posX = 0.5f;
@@ -170,14 +176,15 @@ DWORD WINAPI RecvThread(LPVOID arg)
 				g_Object[HERO_ID2].coefFriction = initial_data->coef_Frict;
 				g_Object[HERO_ID2].updated = true;
 
-				player1 = 2;
+				player2RID = GetCurrentThreadId();
+				player1 += 1;
 			}
 		}
 
 		if (len == sizeof(RecvSendData)) {
 			RS_data = (RecvSendData*)&buf;
 			if (RS_data->type == KIND_HERO) {
-				if (player2Port == ntohs(clientaddr.sin_port)) {
+				if (player2RID == GetCurrentThreadId()) {
 					RS_data->idx_num = HERO_ID2;
 				}
 			}
@@ -204,7 +211,10 @@ DWORD WINAPI RecvThread(LPVOID arg)
 			//	RS_data->type, RS_data->idx_num);
 		}
 
-		SetEvent(wait_Recv);
+		if (GetCurrentThreadId() == player1RID)
+			SetEvent(wait_Recv[0]);
+		else if (GetCurrentThreadId() == player2RID)
+			SetEvent(wait_Recv[1]);
 	}
 
 	return 0;
@@ -225,10 +235,10 @@ DWORD WINAPI SendThread(LPVOID arg)
 	addrlen = sizeof(client_sock);
 	getpeername(client_sock, (SOCKADDR*)& clientaddr, &addrlen);
 	while (1) {
-		WaitForSingleObject(wait_Recv, INFINITE);
+		WaitForMultipleObjects(2, wait_Recv, TRUE, INFINITE);
 
 		//g_Object에 있는 값을 RecvSendData에 넣어 보낸다.
-		if (player2Port == ntohs(clientaddr.sin_port)) {
+		if (player2SID == GetCurrentThreadId()) {
 			Object temp = g_Object[HERO_ID];
 			g_Object[HERO_ID] = g_Object[HERO_ID2];
 			g_Object[HERO_ID2] = temp;
@@ -252,8 +262,10 @@ DWORD WINAPI SendThread(LPVOID arg)
 				//	SendData.type, SendData.idx_num);
 			}
 		}
-
-		SetEvent(wait_Send);
+		if (GetCurrentThreadId() == player1SID)
+			SetEvent(wait_Send[0]);
+		else if (GetCurrentThreadId() == player2SID)
+			SetEvent(wait_Send[1]);
 	}
 
 	return 0;
@@ -300,8 +312,11 @@ int main(int argc, char* argv[])
 	SOCKADDR_IN clientaddr;
 	int addrlen;
 
-	wait_Recv = CreateEvent(NULL, FALSE, FALSE, NULL);
-	wait_Send = CreateEvent(NULL, FALSE, TRUE, NULL);
+	wait_Recv[0] = CreateEvent(NULL, FALSE, FALSE, NULL);
+	wait_Recv[1] = CreateEvent(NULL, FALSE, FALSE, NULL);
+
+	wait_Send[0] = CreateEvent(NULL, FALSE, TRUE, NULL);
+	wait_Send[1] = CreateEvent(NULL, FALSE, TRUE, NULL);
 
 	while (1) {
 		// accept()
@@ -317,21 +332,23 @@ int main(int argc, char* argv[])
 
 		if (player1 == 0) {
 			RecvHandle[0] = CreateThread(NULL, 0, RecvThread, (LPVOID)client_sock, 0, NULL);
+			SendHandle[0] = CreateThread(NULL, 0, SendThread, (LPVOID)client_sock, 0, NULL);
 		}
 		else if (player1 == 1) {
 			RecvHandle[1] = CreateThread(NULL, 0, RecvThread, (LPVOID)client_sock, 0, NULL);
-			player2Port = ntohs(clientaddr.sin_port);
+			SendHandle[1] = CreateThread(NULL, 0, SendThread, (LPVOID)client_sock, 0, NULL);
 		}
 
-		SendHandle = CreateThread(NULL, 0, SendThread, (LPVOID)client_sock, 0, NULL);
 
 
-		if (SendHandle == NULL) closesocket(client_sock);
-		else {
-			CloseHandle(RecvHandle[0]);
-			CloseHandle(RecvHandle[1]);
-			CloseHandle(SendHandle);
-		}
+
+		//if ((SendHandle[0] == NULL&& RecvHandle[0] == NULL)) closesocket(client_sock);
+		//else {
+		//	CloseHandle(RecvHandle[0]);
+		//	CloseHandle(RecvHandle[1]);
+		//	CloseHandle(SendHandle[0]);
+		//	CloseHandle(SendHandle[1]);
+		//}
 
 	}
 
