@@ -16,7 +16,9 @@
 #define BUFSIZE 1024
 
 Object g_Object[MAX_OBJECTS];
-int player1 = 0;
+int player1 = 0;		//1P = 0, 2P = 1의 값을 받음
+int player2ID;
+
 
 HANDLE RecvHandle[2];
 HANDLE SendHandle;
@@ -150,7 +152,6 @@ DWORD WINAPI RecvThread(LPVOID arg)
 				g_Object[HERO_ID].coefFriction = initial_data->coef_Frict;
 				g_Object[HERO_ID].updated = true;
 
-				send(client_sock, (char*)player1, sizeof(player1), 0);
 				player1 = 1;
 			}
 			else if(player1 == 1){								//2번플레이어
@@ -169,13 +170,18 @@ DWORD WINAPI RecvThread(LPVOID arg)
 				g_Object[HERO_ID2].coefFriction = initial_data->coef_Frict;
 				g_Object[HERO_ID2].updated = true;
 
-				send(client_sock, (char*)player1, sizeof(player1), 0);
 				player1 = 2;
+				player2ID = GetCurrentThreadId();
 			}
 		}
 
 		if (len == sizeof(RecvSendData)) {
 			RS_data = (RecvSendData*)&buf;
+			if (RS_data->type == KIND_HERO) {
+				if (player2ID == GetCurrentThreadId()) {
+					RS_data->idx_num = HERO_ID2;
+				}
+			}
 			RSToObject(&g_Object[RS_data->idx_num], RS_data);
 
 			if (RS_data->type == KIND_BULLET) {
@@ -193,10 +199,10 @@ DWORD WINAPI RecvThread(LPVOID arg)
 				g_Object[RS_data->idx_num].updated = true;
 
 			//디버깅용 출력코드
-			printf("Pos : %f %f %f, Vel : %f %f %f, type: %d, idx_num : %d\n",
-				RS_data->posX, RS_data->posY, RS_data->posZ,
-				RS_data->VelX, RS_data->VelY, RS_data->VelZ,
-				RS_data->type, RS_data->idx_num);
+			//printf("Pos : %f %f %f, Vel : %f %f %f, type: %d, idx_num : %d\n",
+			//	RS_data->posX, RS_data->posY, RS_data->posZ,
+			//	RS_data->VelX, RS_data->VelY, RS_data->VelZ,
+			//	RS_data->type, RS_data->idx_num);
 		}
 
 		SetEvent(wait_Recv);
@@ -220,9 +226,9 @@ DWORD WINAPI SendThread(LPVOID arg)
 	addrlen = sizeof(client_sock);
 	getpeername(client_sock, (SOCKADDR*)& clientaddr, &addrlen);
 
-	//if (g_Object[0].posX != NULL && g_Object[1].posX != NULL) {
-	//	both_exist = true;
+	//if (player1 == 2) {
 	//	send(client_sock, (char*)&both_exist, sizeof(both_exist), 0);
+	//	player1 = 3;
 	//}
 
 	while (1) {
