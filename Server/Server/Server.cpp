@@ -145,7 +145,8 @@ DWORD WINAPI RecvSendThread(LPVOID arg)
 				g_Object[HERO_ID].sizeY = initial_data->sizeY;
 				g_Object[HERO_ID].sizeZ = initial_data->sizeZ;
 				g_Object[HERO_ID].coefFriction = initial_data->coef_Frict;
-				g_Object[HERO_ID].updated = true;
+				g_Object[HERO_ID].updated_1p = true;
+				g_Object[HERO_ID].updated_2p = true;
 
 				player1RID = GetCurrentThreadId();
 				player1 += 1;
@@ -164,7 +165,8 @@ DWORD WINAPI RecvSendThread(LPVOID arg)
 				g_Object[HERO_ID2].sizeY = initial_data->sizeY;
 				g_Object[HERO_ID2].sizeZ = initial_data->sizeZ;
 				g_Object[HERO_ID2].coefFriction = initial_data->coef_Frict;
-				g_Object[HERO_ID2].updated = true;
+				g_Object[HERO_ID2].updated_1p = true;
+				g_Object[HERO_ID2].updated_2p = true;
 
 				player2RID = GetCurrentThreadId();
 				player1 += 1;
@@ -173,9 +175,12 @@ DWORD WINAPI RecvSendThread(LPVOID arg)
 
 		if (len == sizeof(RecvSendData)) {
 			RS_data = (RecvSendData*)&buf;
-			if (RS_data->type == KIND_HERO) {
-				if (player2RID == GetCurrentThreadId()) {
+			if (player2RID == GetCurrentThreadId()) {
+				if (RS_data->idx_num == HERO_ID) {
 					RS_data->idx_num = HERO_ID2;
+				}
+				else if (RS_data->idx_num == HERO_ID2) {
+					RS_data->idx_num = HERO_ID;
 				}
 			}
 			RSToObject(&g_Object[RS_data->idx_num], RS_data);
@@ -188,12 +193,14 @@ DWORD WINAPI RecvSendThread(LPVOID arg)
 				g_Object[RS_data->idx_num].sizeZ = 0.75f;
 
 				if (RS_data->VelX == 0.f  && RS_data->VelY == 0.f) {
-					g_Object[RS_data->idx_num].updated = false;
+					g_Object[RS_data->idx_num].updated_1p = false;
+					g_Object[RS_data->idx_num].updated_2p = false;
 				}
 			}
-			else
-				g_Object[RS_data->idx_num].updated = true;
-
+			else {
+				g_Object[RS_data->idx_num].updated_1p = true;
+				g_Object[RS_data->idx_num].updated_2p = true;
+			}
 			//디버깅용 출력코드
 			//printf("Pos : %f %f %f, Vel : %f %f %f, type: %d, idx_num : %d\n",
 			//	RS_data->posX, RS_data->posY, RS_data->posZ,
@@ -223,7 +230,7 @@ DWORD WINAPI RecvSendThread(LPVOID arg)
 		}
 
 		for (int i = 0; i < MAX_OBJECTS; ++i) {
-			if (g_Object[i].updated == true) {
+			if (g_Object[i].updated_1p == true || g_Object[i].updated_2p == true) {
 
 				ObjectToRS(g_Object[i], &SendData);
 				len = sizeof(SendData);
@@ -231,7 +238,10 @@ DWORD WINAPI RecvSendThread(LPVOID arg)
 				retval = send(client_sock, (char*)& len, sizeof(int), 0);
 				retval = send(client_sock, (char*)& SendData, len, 0);
 
-				g_Object[i].updated = false;
+				if(GetCurrentThreadId() == player1RID)
+					g_Object[i].updated_1p = false;
+				else if (GetCurrentThreadId() == player2RID)
+					g_Object[i].updated_2p = false;
 
 				//디버깅용 출력코드
 				printf("(%d) Pos : %f %f %f, Vel : %f %f %f, type: %d, idx_num : %d\n", GetCurrentThreadId(),

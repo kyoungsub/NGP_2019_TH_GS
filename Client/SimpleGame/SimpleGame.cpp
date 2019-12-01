@@ -174,16 +174,17 @@ void RenderScene(int temp) {
 	sData.idx_num = HERO_ID;
 
 	
+	for (int i = 0; i < 2; ++i) {
+		len = sizeof(sData);
+		send(g_sock, (char*)&len, sizeof(int), 0);
+		send(g_sock, (const char*)&sData, len, 0);
 
-	len = sizeof(sData);
-	send(g_sock, (char*)&len, sizeof(int), 0);
-	send(g_sock, (const char*)&sData, len, 0);
+		//data 받기
+		recvn(g_sock, (char *)& len, sizeof(int), 0);
+		recvn(g_sock, (char *)&rData, len, 0);
 
-	//data 받기
-	recvn(g_sock, (char *)& len, sizeof(int), 0);
-	recvn(g_sock, (char *)&rData, len, 0);
-
-	g_ScnMgr->RecvDataToObject(rData);
+		g_ScnMgr->RecvDataToObject(rData);
+	}
 
 	glutTimerFunc(16, RenderScene, 0);
 }

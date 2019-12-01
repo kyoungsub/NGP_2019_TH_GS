@@ -65,5 +65,6 @@ struct Object
 	int HP;				//체력
 	int State;			//생사여부
 
-	bool updated = false;		//갱신여부
+	bool updated_1p = false;		//1p갱신여부
+	bool updated_2p = false;		//2p갱신여부
 };
