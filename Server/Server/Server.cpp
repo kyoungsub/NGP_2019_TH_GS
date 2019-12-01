@@ -16,9 +16,9 @@
 #define BUFSIZE 1024
 
 Object g_Object[MAX_OBJECTS];
-bool player1 = true;
+int player1 = 1;
 
-HANDLE RecvHandle;
+HANDLE RecvHandle[2];
 HANDLE SendHandle;
 
 HANDLE wait_Recv;
@@ -133,7 +133,7 @@ DWORD WINAPI RecvThread(LPVOID arg)
 		}
 
 		if (initial_data->mass == 0.15f) {		//플레이어 데이터
-			if (player1 == true)		//1번플레이어 없을때
+			if (player1 == 0)		//1번플레이어 없을때
 			{
 				g_Object[HERO_ID].posX = -0.5f;
 				g_Object[HERO_ID].posY = 0.f;
@@ -150,10 +150,10 @@ DWORD WINAPI RecvThread(LPVOID arg)
 				g_Object[HERO_ID].coefFriction = initial_data->coef_Frict;
 				g_Object[HERO_ID].updated = true;
 
-				send(client_sock, (char*)player1, sizeof(player1), 0);
-				player1 = false;
+				//send(client_sock, (char*)player1, sizeof(player1), 0);
+				player1 = 1;
 			}
-			else {								//2번플레이어
+			else if(player1 == 1){								//2번플레이어
 				g_Object[HERO_ID2].posX = 0.5f;
 				g_Object[HERO_ID2].posY = 0.f;
 				g_Object[HERO_ID2].posZ = 0.f;
@@ -167,9 +167,10 @@ DWORD WINAPI RecvThread(LPVOID arg)
 				g_Object[HERO_ID2].sizeY = initial_data->sizeY;
 				g_Object[HERO_ID2].sizeZ = initial_data->sizeZ;
 				g_Object[HERO_ID2].coefFriction = initial_data->coef_Frict;
-				g_Object[HERO_ID].updated = true;
+				g_Object[HERO_ID2].updated = true;
 
-				send(client_sock, (char*)player1, sizeof(player1), 0);
+				//send(client_sock, (char*)player1, sizeof(player1), 0);
+				player1 = 2;
 			}
 		}
 
@@ -308,13 +309,18 @@ int main(int argc, char* argv[])
 		// 접속한 클라이언트 정보 출력
 		printf("\n[TCP 서버] 클라이언트 접속: IP 주소=%s, 포트 번호=%d\n",inet_ntoa(clientaddr.sin_addr), ntohs(clientaddr.sin_port));
 
-
-		RecvHandle = CreateThread(NULL, 0, RecvThread, (LPVOID)client_sock, 0, NULL);
+		if (player1 == 0) {
+			RecvHandle[0] = CreateThread(NULL, 0, RecvThread, (LPVOID)client_sock, 0, NULL);
+		}
+		else if (player1 == 1) {
+			RecvHandle[1] = CreateThread(NULL, 0, RecvThread, (LPVOID)client_sock, 0, NULL);
+		}
 
 		SendHandle = CreateThread(NULL, 0, SendThread, (LPVOID)client_sock, 0, NULL);
-		if (RecvHandle == NULL || SendHandle == NULL) closesocket(client_sock);
+		if (RecvHandle[0] == NULL || RecvHandle[1] == NULL || SendHandle == NULL) closesocket(client_sock);
 		else {
-			CloseHandle(RecvHandle);
+			CloseHandle(RecvHandle[0]);
+			CloseHandle(RecvHandle[1]);
 			CloseHandle(SendHandle);
 		}
 
