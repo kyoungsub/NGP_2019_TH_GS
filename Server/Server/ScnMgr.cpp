@@ -21,10 +21,20 @@ BOOL PLAY = TRUE;
 
 ScnMgr::ScnMgr()
 {
+	// Init Objects List
+	for (int i = 0; i < MAX_OBJECTS; ++i) {
+		m_Objects[i] = NULL;
+	}
 }
 
 ScnMgr::~ScnMgr()
 {
+	if (m_Objects[HERO_ID]) {
+		delete[] m_Objects;
+		for (int i = 0; i < HERO_ID; ++i) {
+			m_Objects[i] = NULL;
+		}
+	}
 }
 
 void ScnMgr::Update(float eTime)
@@ -179,25 +189,25 @@ void ScnMgr::GarbageCollector()
 }
 
 
-void ScnMgr::ApplyForce(float x, float y, float z, float eTime)
+void ScnMgr::ApplyForce(float x, float y, float z, int player, float eTime)
 {
 	if (PLAY) {
 		int state;
-		m_Objects[HERO_ID]->GetState(&state);
+		m_Objects[player]->GetState(&state);
 		if (state == STATE_AIR) {
 			z = 0.0f;
 		}
 
 		float cx, cy, cz;
-		m_Objects[HERO_ID]->GetPos(&cx, &cy, &cz);
+		m_Objects[player]->GetPos(&cx, &cy, &cz);
 
 		if (cx > 3.0f) { x = -1; }
 		if (cx < -3.0f) { x = 1; }
 		if (cy > 1.0f) { y = -1; }
 		if (cy < -2.0f) { y = 1; }
 
-		if (m_Objects[HERO_ID] != NULL) {
-			m_Objects[HERO_ID]->ApplyForce(x, y, z, eTime);
+		if (m_Objects[player] != NULL) {
+			m_Objects[player]->ApplyForce(x, y, z, eTime);
 		}
 	}
 }
@@ -248,38 +258,6 @@ void ScnMgr::DeleteUI(int id)
 	if (m_HP[id] != NULL) {
 		delete m_HP[id];
 		m_HP[id] = NULL;
-	}
-}
-
-void ScnMgr::AddPlayer(float x, float y, float z, float vx, float vy, float vz) {
-	// Creat Hero Object
-
-	if (x == -0.5f) {
-		player1 = TRUE;
-		m_Objects[HERO_ID] = new Object();
-		m_Objects[HERO_ID]->SetPos(x, y, z);
-		m_Objects[HERO_ID]->SetVel(0.f, 0.f, 0.f);
-		m_Objects[HERO_ID]->SetAcc(0.0f, 0.0f, 0.0f);
-		m_Objects[HERO_ID]->SetSize(0.6f, 0.6f, 0.6f);
-		m_Objects[HERO_ID]->SetMass(0.15f);
-		m_Objects[HERO_ID]->SetCoefFrict(0.5f);
-		m_Objects[HERO_ID]->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
-		m_Objects[HERO_ID]->SetKind(KIND_HERO);
-		m_Objects[HERO_ID]->SetHP(240);
-		m_Objects[HERO_ID]->SetState(STATE_GROUND);
-	}
-	else if (x == 0.5f) {
-		m_Objects[HERO_ID2] = new Object();
-		m_Objects[HERO_ID2]->SetPos(-x, -y, -z);
-		m_Objects[HERO_ID2]->SetVel(0.f, 0.f, 0.f);
-		m_Objects[HERO_ID2]->SetAcc(0.0f, 0.0f, 0.0f);
-		m_Objects[HERO_ID2]->SetSize(0.6f, 0.6f, 0.6f);
-		m_Objects[HERO_ID2]->SetMass(0.15f);
-		m_Objects[HERO_ID2]->SetCoefFrict(0.5f);
-		m_Objects[HERO_ID2]->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
-		m_Objects[HERO_ID2]->SetKind(KIND_HERO);
-		m_Objects[HERO_ID2]->SetHP(240);
-		m_Objects[HERO_ID2]->SetState(STATE_GROUND);
 	}
 }
 

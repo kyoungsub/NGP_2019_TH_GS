@@ -10,14 +10,16 @@
 
 #include "stdafx.h"
 #include "Global.h"
+#include "ScnMgr.h"
 #include "Object.h"
 
 #define SERVERPORT 9000
 #define BUFSIZE 1024
 
-Object g_Object[MAX_OBJECTS];
-std::list<char> player1Event;
-std::list<char> player2Event;
+ScnMgr* g_ScnMgr = NULL;
+
+std::list<int> player1Event;
+std::list<int> player2Event;
 
 HANDLE recvsendHandle[2];
 HANDLE gameLogicHandle;
@@ -25,8 +27,15 @@ HANDLE gameLogicHandle;
 HANDLE wait_Recv[2];
 HANDLE wait_Send;
 
+DWORD g_PrevTime = 0;
+DWORD g_ShootStartTime = 0;
+DWORD ShootElapsedTime = 0;
+float eTime;
+
 int player1ID;
 int player2ID;
+
+
 
 // 소켓 함수 오류 출력 후 종료
 void err_quit(const char* msg)
@@ -90,46 +99,48 @@ DWORD WINAPI RecvSendThread(LPVOID arg)
 	getpeername(client_sock, (SOCKADDR*)& clientaddr, &addrlen);
 
 	if (GetCurrentThreadId() == player1ID) {
-		g_Object[HERO_ID].SetPos(-0.5f, 0.0f, 0.0f);
-		g_Object[HERO_ID].SetVel(0.f, 0.f, 0.f);
-		g_Object[HERO_ID].SetAcc(0.0f, 0.0f, 0.0f);
-		g_Object[HERO_ID].SetSize(0.6f, 0.6f, 0.6f);
-		g_Object[HERO_ID].SetMass(0.15f);
-		g_Object[HERO_ID].SetCoefFrict(0.5f);
-		g_Object[HERO_ID].SetColor(1.0f, 1.0f, 1.0f, 1.0f);
-		g_Object[HERO_ID].SetKind(KIND_HERO);
-		g_Object[HERO_ID].SetHP(240);
-		g_Object[HERO_ID].SetState(STATE_GROUND);
+		g_ScnMgr->m_Objects[HERO_ID] = new Object();
+		g_ScnMgr->m_Objects[HERO_ID]->SetPos(-0.5f, 0.0f, 0.0f);
+		g_ScnMgr->m_Objects[HERO_ID]->SetVel(0.f, 0.f, 0.f);
+		g_ScnMgr->m_Objects[HERO_ID]->SetAcc(0.0f, 0.0f, 0.0f);
+		g_ScnMgr->m_Objects[HERO_ID]->SetSize(0.6f, 0.6f, 0.6f);
+		g_ScnMgr->m_Objects[HERO_ID]->SetMass(0.15f);
+		g_ScnMgr->m_Objects[HERO_ID]->SetCoefFrict(0.5f);
+		g_ScnMgr->m_Objects[HERO_ID]->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+		g_ScnMgr->m_Objects[HERO_ID]->SetKind(KIND_HERO);
+		g_ScnMgr->m_Objects[HERO_ID]->SetHP(240);
+		g_ScnMgr->m_Objects[HERO_ID]->SetState(STATE_GROUND);
 		player_num = HERO_ID;
 	}
 	else if (GetCurrentThreadId() == player2ID) {
-		g_Object[HERO_ID2].SetPos(0.5f, 0.0f, 0.0f);
-		g_Object[HERO_ID2].SetVel(0.f, 0.f, 0.f);
-		g_Object[HERO_ID2].SetAcc(0.0f, 0.0f, 0.0f);
-		g_Object[HERO_ID2].SetSize(0.6f, 0.6f, 0.6f);
-		g_Object[HERO_ID2].SetMass(0.15f);
-		g_Object[HERO_ID2].SetCoefFrict(0.5f);
-		g_Object[HERO_ID2].SetColor(1.0f, 1.0f, 1.0f, 1.0f);
-		g_Object[HERO_ID2].SetKind(KIND_HERO);
-		g_Object[HERO_ID2].SetHP(240);
-		g_Object[HERO_ID2].SetState(STATE_GROUND);
+		g_ScnMgr->m_Objects[HERO_ID2] = new Object();
+		g_ScnMgr->m_Objects[HERO_ID2]->SetPos(0.5f, 0.0f, 0.0f);
+		g_ScnMgr->m_Objects[HERO_ID2]->SetVel(0.f, 0.f, 0.f);
+		g_ScnMgr->m_Objects[HERO_ID2]->SetAcc(0.0f, 0.0f, 0.0f);
+		g_ScnMgr->m_Objects[HERO_ID2]->SetSize(0.6f, 0.6f, 0.6f);
+		g_ScnMgr->m_Objects[HERO_ID2]->SetMass(0.15f);
+		g_ScnMgr->m_Objects[HERO_ID2]->SetCoefFrict(0.5f);
+		g_ScnMgr->m_Objects[HERO_ID2]->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+		g_ScnMgr->m_Objects[HERO_ID2]->SetKind(KIND_HERO);
+		g_ScnMgr->m_Objects[HERO_ID2]->SetHP(240);
+		g_ScnMgr->m_Objects[HERO_ID2]->SetState(STATE_GROUND);
 		player_num = HERO_ID2;
 	}
 
 	while (1) {
 		//data 받기
 		retval = recvn(client_sock, (char *)& len, sizeof(int), 0);
-		if (retval == SOCKET_ERROR) err_display("recv()");
 		retval = recvn(client_sock, buf, len, 0);
-		if (retval == SOCKET_ERROR) err_display("recv()");
 
-		if (player_num == 0) {
-			for (int i = 0; i < len; ++i)
-				player1Event.push_back(buf[i]);
-		}
-		else if (player_num == 1) {
-			for (int i = 0; i < len; ++i)
-				player2Event.push_back(buf[i]);
+		if (eTime >= 0.0015f) {
+			if (player_num == 0) {
+				for (int i = 0; i < len; ++i)
+					player1Event.push_back(buf[i]);
+			}
+			else if (player_num == 1) {
+				for (int i = 0; i < len; ++i)
+					player2Event.push_back(buf[i]);
+			}
 		}
 
 		SetEvent(wait_Recv[player_num]);
@@ -137,8 +148,9 @@ DWORD WINAPI RecvSendThread(LPVOID arg)
 		/////////////////////////////SEND
 		WaitForSingleObject(wait_Send, INFINITE);
 
+		//int read_data = 0;
 		//while (len > 0) {
-		//	memcpy(RS_data, buf + len, sizeof(RecvSendData));
+		//	memcpy(buf + read_data, , sizeof(SendData));
 		//}
 
 		retval = send(client_sock, (char*)& len, sizeof(int), 0);
@@ -151,14 +163,40 @@ DWORD WINAPI RecvSendThread(LPVOID arg)
 
 DWORD WINAPI GameLogicThread(LPVOID arg)
 {
-	//initialize boss data
-	//Boss data = g_Object[3]
+	g_PrevTime = GetTickCount();
+	g_ScnMgr = new ScnMgr();
 
 	//보스갱신및 충돌체크
 	while (1) {
 		//Recv가 끝나면 시작
-		WaitForMultipleObjects(2, wait_Recv, TRUE, INFINITE);
+		//WaitForMultipleObjects(2, wait_Recv, TRUE, INFINITE);
+		WaitForSingleObject(wait_Recv[0], INFINITE);
 
+		//Apply Force
+		float forceX = 0.0f;
+		float forceY = 0.0f;
+		float forceZ = 0.0f;
+		float amount = 1.0f;
+		float zAmount = 20.0f;
+
+		//WASD위아래왼쪽오른쪽
+		if (player1Event.size() != 0) {
+			forceY += amount * player1Event.front();
+			player1Event.pop_front();
+			forceX -= amount * player1Event.front();
+			player1Event.pop_front();
+			forceY -= amount * player1Event.front();
+			player1Event.pop_front();
+			forceX += amount * player1Event.front();
+			player1Event.pop_front();
+			g_ScnMgr->ApplyForce(forceX, forceY, forceZ, HERO_ID, eTime);
+
+			std::cout << forceX << forceY << std::endl;
+
+			//총알키값 받았다 치자
+			for (int i = 0; i < 4; i++)
+				player1Event.pop_front();
+		}
 
 		//종료시 Send 시작
 		SetEvent(wait_Send);
@@ -207,7 +245,7 @@ int main(int argc, char* argv[])
 
 	wait_Send = CreateEvent(NULL, FALSE, FALSE, NULL);
 
-	while (1) {
+	while (recvsendHandle[1] == NULL) {
 		// accept()
 		addrlen = sizeof(clientaddr);
 		client_sock = accept(listen_sock, (SOCKADDR*)& clientaddr, &addrlen);
@@ -226,7 +264,26 @@ int main(int argc, char* argv[])
 			recvsendHandle[1] = CreateThread(NULL, 0, RecvSendThread, (LPVOID)client_sock, 0, NULL);
 			player2ID = GetThreadId(recvsendHandle[1]);
 		}
+	}
 
+	//Server ElaspedTime
+	while (1) {
+		// Calc Elapsed Time
+		if (g_PrevTime == 0) {
+			g_PrevTime = GetTickCount();
+			return 0;
+		}
+		DWORD CurTime = GetTickCount();
+		DWORD ElapsedTime = CurTime - g_PrevTime;
+		g_PrevTime = CurTime;
+
+		eTime = (float)ElapsedTime / 1000.0f;
+
+		printf("%f \n", eTime);
+
+		// Calc Shoot Delay
+		DWORD ShootCurTime = GetTickCount();
+		ShootElapsedTime = ShootCurTime - g_ShootStartTime;
 	}
 
 	// closesocket()

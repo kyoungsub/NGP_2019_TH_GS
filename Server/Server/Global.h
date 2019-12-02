@@ -48,8 +48,7 @@ struct InitData {
 //전송 구조체
 #pragma pack(1)
 struct SendData {
-	float posX, posY, posZ;
-	float VelX, VelY, VelZ;
+	float posX, posY;
 	int type, idx_num;
 };
 #pragma pack()

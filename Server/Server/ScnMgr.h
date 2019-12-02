@@ -17,14 +17,13 @@ private:
 public:
 
 	Object *m_Objects[MAX_OBJECTS];
-	BOOL player1;
 
 	ScnMgr();
 	~ScnMgr();
 
 	void Update(float eTime);
 	void GarbageCollector();
-	void ApplyForce(float x, float y, float z, float eTime);
+	void ApplyForce(float x, float y, float z, int player, float eTime);
 
 	void AddObject(float x, float y, float z, float sx, float sy, float sz, float vx, float vy, float vz, int kind, int hp, int state);
 	void DeleteObject(int id);

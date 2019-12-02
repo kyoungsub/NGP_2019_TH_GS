@@ -90,14 +90,11 @@ int recvn(SOCKET s, char* buf, int len, int flags)
 DWORD WINAPI RecvThread(LPVOID arg)
 {
 	int retval;
-	SOCKET client_sock = (SOCKET)arg;
-	SOCKADDR_IN clientaddr;
-	int addrlen;
+	SOCKET sock = (SOCKET)arg;
 	int len;
 	char buf[BUFSIZE];
 	
-	addrlen = sizeof(client_sock);
-	getpeername(client_sock, (SOCKADDR*)& clientaddr, &addrlen);
+
 
 	while (1) {
 		
@@ -109,14 +106,11 @@ DWORD WINAPI RecvThread(LPVOID arg)
 DWORD WINAPI SendThread(LPVOID arg)
 {
 	int retval;
-	SOCKET client_sock = (SOCKET)arg;
-	SOCKADDR_IN clientaddr;
+	SOCKET sock = (SOCKET)arg;
 	int addrlen;
 	int len;
 	char buf[8];
 
-	addrlen = sizeof(client_sock);
-	getpeername(client_sock, (SOCKADDR*)& clientaddr, &addrlen);
 	while (1) {
 		if (g_KeyW) {
 			buf[0] = TRUE;
@@ -164,8 +158,8 @@ DWORD WINAPI SendThread(LPVOID arg)
 		
 		int retval;
 		len = sizeof(buf);
-		retval = send(client_sock, (char*)&len, sizeof(int), 0);
-		retval = send(client_sock, buf, len, 0);
+		retval = send(sock, (char*)&len, sizeof(int), 0);
+		retval = send(sock, buf, len, 0);
 
 	}
 
@@ -369,8 +363,8 @@ int main(int argc, char **argv) {
 
 	HANDLE hThread[2];
 
-	hThread[0] = CreateThread(NULL, 0, RecvThread, NULL, 0, NULL);
-	hThread[1] = CreateThread(NULL, 0, SendThread, NULL, 0, NULL);
+	hThread[0] = CreateThread(NULL, 0, RecvThread, (LPVOID)g_sock, 0, NULL);
+	hThread[1] = CreateThread(NULL, 0, SendThread, (LPVOID)g_sock, 0, NULL);
 
 	g_PrevTime = glutGet(GLUT_ELAPSED_TIME);
 	glutTimerFunc(16, RenderScene, 0);
