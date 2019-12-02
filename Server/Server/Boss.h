@@ -1,11 +1,9 @@
 #pragma once
-#include "Datastruct.h"
-
-class Boss
+#include "Object.h"
+class Boss :
+	public Object
 {
 public:
-	Object BossUnit;
-
 	Boss();
 	virtual ~Boss();
 
@@ -19,8 +17,6 @@ public:
 
 	void GetDelta(float *x, float *y, float *z);
 	void SetDelta(float x, float y, float z);
-
-	void InitBoss();
 
 private:
 	float m_AnimationNextTime = 0.075f;

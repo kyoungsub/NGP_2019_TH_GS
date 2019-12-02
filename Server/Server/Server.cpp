@@ -9,8 +9,9 @@
 #include<io.h>
 #include<fcntl.h>
 
-#include "Datastruct.h"
-#include "Boss.h"
+#include "stdafx.h"
+#include "Global.h"
+#include "Object.h"
 
 #define SERVERPORT 9000
 #define BUFSIZE 1024
@@ -18,7 +19,6 @@
 Object g_Object[MAX_OBJECTS];
 int player1 = 0;		//1P = 0, 2P = 1의 값을 받음
 u_short player2Port;
-
 
 HANDLE RecvHandle[2];
 HANDLE SendHandle;
@@ -73,30 +73,6 @@ int recvn(SOCKET s, char* buf, int len, int flags)
 	return (len - left);
 }
 
-//Object를 RSData로 변환
-void ObjectToRS(Object a, RecvSendData* b) {
-	b->posX = a.posX;
-	b->posY = a.posY;
-	b->posZ = a.posZ;
-	b->VelX = a.velX;
-	b->VelY = a.velY;
-	b->VelZ = a.velZ;
-	b->type = a.type;
-	b->idx_num = a.idx_num;
-}
-
-//RSData를 Object로 변환
-void RSToObject(Object* a, RecvSendData* b) {
-	a->posX = b->posX;
-	a->posY = b->posY;
-	a->posZ = b->posZ;
-	a->velX = b->VelX;
-	a->velY = b->VelY;
-	a->velZ = b->VelZ;
-	a->type = b->type;
-	a->idx_num = b->idx_num;
-}
-
 void Update() {
 
 }
@@ -125,85 +101,7 @@ DWORD WINAPI RecvThread(LPVOID arg)
 		retval = recvn(client_sock, buf, len, 0);
 		//if (retval == SOCKET_ERROR) err_display("recv()");
 
-		int i = 0;
-		if (len == sizeof(InitData)) {
-			initial_data = (InitData*)&buf;
-			//디버깅용 출력코드
-			printf("%d mass : %f, size : %f %f %f, coef_frict : %f \n", i,
-				initial_data->mass, initial_data->sizeX, initial_data->sizeY, initial_data->sizeZ, initial_data->coef_Frict);
-			i++;
-		}
-
-		if (initial_data->mass == 0.15f) {		//플레이어 데이터
-			if (player1 == 0)		//1번플레이어 없을때
-			{
-				g_Object[HERO_ID].posX = -0.5f;
-				g_Object[HERO_ID].posY = 0.f;
-				g_Object[HERO_ID].posZ = 0.f;
-				g_Object[HERO_ID].velX = 0.f;
-				g_Object[HERO_ID].velY = 0.f;
-				g_Object[HERO_ID].velZ = 0.f;
-				g_Object[HERO_ID].type = KIND_HERO;
-				g_Object[HERO_ID].idx_num = HERO_ID;
-				g_Object[HERO_ID].mass = initial_data->mass;
-				g_Object[HERO_ID].sizeX = initial_data->sizeX;
-				g_Object[HERO_ID].sizeY = initial_data->sizeY;
-				g_Object[HERO_ID].sizeZ = initial_data->sizeZ;
-				g_Object[HERO_ID].coefFriction = initial_data->coef_Frict;
-				g_Object[HERO_ID].updated = true;
-
-				player1 = 1;
-			}
-			else if(player1 == 1){								//2번플레이어
-				g_Object[HERO_ID2].posX = 0.5f;
-				g_Object[HERO_ID2].posY = 0.f;
-				g_Object[HERO_ID2].posZ = 0.f;
-				g_Object[HERO_ID2].velX = 0.f;
-				g_Object[HERO_ID2].velY = 0.f;
-				g_Object[HERO_ID2].velZ = 0.f;
-				g_Object[HERO_ID2].type = KIND_HERO;
-				g_Object[HERO_ID2].idx_num = HERO_ID2;
-				g_Object[HERO_ID2].mass = initial_data->mass;
-				g_Object[HERO_ID2].sizeX = initial_data->sizeX;
-				g_Object[HERO_ID2].sizeY = initial_data->sizeY;
-				g_Object[HERO_ID2].sizeZ = initial_data->sizeZ;
-				g_Object[HERO_ID2].coefFriction = initial_data->coef_Frict;
-				g_Object[HERO_ID2].updated = true;
-
-				player1 = 2;
-			}
-		}
-
-		if (len == sizeof(RecvSendData)) {
-			RS_data = (RecvSendData*)&buf;
-			if (RS_data->type == KIND_HERO) {
-				if (player2Port == ntohs(clientaddr.sin_port)) {
-					RS_data->idx_num = HERO_ID2;
-				}
-			}
-			RSToObject(&g_Object[RS_data->idx_num], RS_data);
-
-			if (RS_data->type == KIND_BULLET) {
-				g_Object[RS_data->idx_num].mass = 0.2f;
-				g_Object[RS_data->idx_num].coefFriction = 5.0f;
-				g_Object[RS_data->idx_num].sizeX = 0.75f;
-				g_Object[RS_data->idx_num].sizeY = 0.75f;
-				g_Object[RS_data->idx_num].sizeZ = 0.75f;
-
-				if (RS_data->VelX == 0.f  && RS_data->VelY == 0.f) {
-					g_Object[RS_data->idx_num].updated = false;
-				}
-			}
-			else
-				g_Object[RS_data->idx_num].updated = true;
-
-			//디버깅용 출력코드
-			//printf("Pos : %f %f %f, Vel : %f %f %f, type: %d, idx_num : %d\n",
-			//	RS_data->posX, RS_data->posY, RS_data->posZ,
-			//	RS_data->VelX, RS_data->VelY, RS_data->VelZ,
-			//	RS_data->type, RS_data->idx_num);
-		}
-
+		
 		SetEvent(wait_Recv);
 	}
 
@@ -216,7 +114,6 @@ DWORD WINAPI SendThread(LPVOID arg)
 	SOCKET client_sock = (SOCKET)arg;
 	SOCKADDR_IN clientaddr;
 	int addrlen;
-	bool both_exist;
 	int len;
 
 	RecvSendData SendData;
@@ -227,32 +124,7 @@ DWORD WINAPI SendThread(LPVOID arg)
 	while (1) {
 		WaitForSingleObject(wait_Recv, INFINITE);
 
-		//g_Object에 있는 값을 RecvSendData에 넣어 보낸다.
-		if (player2Port == ntohs(clientaddr.sin_port)) {
-			Object temp = g_Object[HERO_ID];
-			g_Object[HERO_ID] = g_Object[HERO_ID2];
-			g_Object[HERO_ID2] = temp;
-		}
-
-		for (int i = 0; i < MAX_OBJECTS; ++i) {
-			if (g_Object[i].updated == true) {
-
-				ObjectToRS(g_Object[i], &SendData);
-				len = sizeof(SendData);
-
-				retval = send(client_sock, (char*)& len, sizeof(int), 0);
-				retval = send(client_sock, (char*)& SendData, len, 0);
-
-				g_Object[i].updated = false;
-
-				//디버깅용 출력코드
-				//printf("Pos : %f %f %f, Vel : %f %f %f, type: %d, idx_num : %d\n",
-				//	SendData.posX, SendData.posY, SendData.posZ,
-				//	SendData.VelX, SendData.VelY, SendData.VelZ,
-				//	SendData.type, SendData.idx_num);
-			}
-		}
-
+		
 		SetEvent(wait_Send);
 	}
 
@@ -263,15 +135,6 @@ DWORD WINAPI SendThread(LPVOID arg)
 int main(int argc, char* argv[])
 {
 	int retval;
-
-	//initialize boss data
-	//Boss data = g_Object[3]
-	Boss Boss;
-	Boss.InitBoss();
-	g_Object[3] = Boss.BossUnit;
-	for (int i = 0; i < MAX_OBJECTS; ++i)
-		g_Object[i].idx_num = i;
-
 
 	// 윈속 초기화
 	WSADATA wsa;
@@ -300,9 +163,6 @@ int main(int argc, char* argv[])
 	SOCKADDR_IN clientaddr;
 	int addrlen;
 
-	wait_Recv = CreateEvent(NULL, FALSE, FALSE, NULL);
-	wait_Send = CreateEvent(NULL, FALSE, TRUE, NULL);
-
 	while (1) {
 		// accept()
 		addrlen = sizeof(clientaddr);
@@ -314,24 +174,6 @@ int main(int argc, char* argv[])
 
 		// 접속한 클라이언트 정보 출력
 		printf("\n[TCP 서버] 클라이언트 접속: IP 주소=%s, 포트 번호=%d\n",inet_ntoa(clientaddr.sin_addr), ntohs(clientaddr.sin_port));
-
-		if (player1 == 0) {
-			RecvHandle[0] = CreateThread(NULL, 0, RecvThread, (LPVOID)client_sock, 0, NULL);
-		}
-		else if (player1 == 1) {
-			RecvHandle[1] = CreateThread(NULL, 0, RecvThread, (LPVOID)client_sock, 0, NULL);
-			player2Port = ntohs(clientaddr.sin_port);
-		}
-
-		SendHandle = CreateThread(NULL, 0, SendThread, (LPVOID)client_sock, 0, NULL);
-
-
-		if (SendHandle == NULL) closesocket(client_sock);
-		else {
-			CloseHandle(RecvHandle[0]);
-			CloseHandle(RecvHandle[1]);
-			CloseHandle(SendHandle);
-		}
 
 	}
 

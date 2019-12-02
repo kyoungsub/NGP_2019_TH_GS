@@ -132,58 +132,11 @@ void RenderScene(int temp) {
 	g_ScnMgr->RenderScene();   // Render   
 	if (ShootElapsedTime % 50 == 0) { // Shoot
 		g_ScnMgr->Shoot(g_Shoot);
-
-		sendData sData;
-		int len;
-		int kind;
-		
-		for (int i = 0; i < MAX_OBJECTS; ++i) {
-			if (g_ScnMgr->m_Objects[i] != NULL) {
-				g_ScnMgr->m_Objects[i]->GetKind(&kind);
-				if (kind == KIND_BULLET) {
-					g_ScnMgr->m_Objects[i]->GetPos(&sData.posX, &sData.posY, &sData.posZ);
-					g_ScnMgr->m_Objects[i]->GetVel(&sData.VelX, &sData.VelY, &sData.VelZ);
-					g_ScnMgr->m_Objects[i]->GetKind(&sData.type);
-					sData.idx_num = i;
-
-					len = sizeof(sData);
-					send(g_sock, (char*)&len, sizeof(int), 0);
-					send(g_sock, (const char*)&sData, len, 0);
-				}
-			}
-		}
 	}
 	g_ScnMgr->GarbageCollector();   // 화면 밖으로 나가는 오브젝트 삭제
 	g_ScnMgr->DoCollisionTest();
 
 	glutSwapBuffers();
-
-	// 파일 데이터 전송에 사용할 변수
-	int curread;
-	int curtotal = 0;
-	int len;
-	int retval;
-
-	// player 1 Send Data
-	sendData sData;
-	recvData rData;
-
-	g_ScnMgr->m_Objects[HERO_ID]->GetPos(&sData.posX, &sData.posY, &sData.posZ);
-	g_ScnMgr->m_Objects[HERO_ID]->GetVel(&sData.VelX, &sData.VelY, &sData.VelZ);
-	g_ScnMgr->m_Objects[HERO_ID]->GetKind(&sData.type);
-	sData.idx_num = HERO_ID;
-
-	
-
-	len = sizeof(sData);
-	send(g_sock, (char*)&len, sizeof(int), 0);
-	send(g_sock, (const char*)&sData, len, 0);
-
-	//data 받기
-	recvn(g_sock, (char *)& len, sizeof(int), 0);
-	recvn(g_sock, (char *)&rData, len, 0);
-
-	g_ScnMgr->RecvDataToObject(rData);
 
 	glutTimerFunc(16, RenderScene, 0);
 }
@@ -195,7 +148,6 @@ void Idle(void) {
 }
 
 void MouseInput(int button, int state, int x, int y) {
-
 }
 
 void KeyDownInput(unsigned char key, int x, int y) {
@@ -328,32 +280,6 @@ int main(int argc, char **argv) {
 	glutSetKeyRepeat(GLUT_KEY_REPEAT_OFF);
 	// Init ScnMgr
 	g_ScnMgr = new ScnMgr();
-
-	// 파일 데이터 전송에 사용할 변수
-	char buf[BUFSIZE];
-	int curread;
-	int curtotal = 0;
-	int len;
-
-	// Init Data Send
-	InitData iData;
-	iData.coef_Frict = 0.5f;
-	iData.mass = 0.15f;
-	iData.sizeX = 0.6f;
-	iData.sizeY = 0.6f;
-	iData.sizeZ = 0.6f;
-
-	len = sizeof(iData);
-	send(g_sock, (char*)&len, sizeof(int), 0);
-	send(g_sock, (const char*)&iData, len, 0);
-
-	// player data recv (수정 해야함)
-	recvData rData;
-
-	recvn(g_sock, (char *)& len, sizeof(int), 0);
-	recvn(g_sock, (char *)&rData, len, 0);
-
-	g_ScnMgr->AddPlayer(rData.posX, rData.posY, rData.posZ, rData.VelX, rData.VelY, rData.VelZ);
 
 	g_PrevTime = glutGet(GLUT_ELAPSED_TIME);
 	glutTimerFunc(16, RenderScene, 0);

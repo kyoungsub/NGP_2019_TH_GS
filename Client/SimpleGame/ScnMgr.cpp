@@ -58,7 +58,6 @@ ScnMgr::ScnMgr()
 	m_DeathTexture = m_Renderer->CreatePngTexture("./textures/deathposter.png");
 	m_BossDoorTexture = m_Renderer->CreatePngTexture("./textures/BossDoor.png");
 
-	/*
 	// Creat Hero Object
 	m_Objects[HERO_ID] = new Object();
 	m_Objects[HERO_ID]->SetPos(0.0f, 0.0f, 0.0f);
@@ -77,8 +76,6 @@ ScnMgr::ScnMgr()
 
 	// Creat BossDoor Object
 	AddObject(0.0f, 1.35f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, KIND_BOSS_DOOR, 100, STATE_GROUND);
-
-	*/
 
 	// Creat HP UI
 	m_HP[0] = new UI();
@@ -864,16 +861,4 @@ void ScnMgr::ChangeMap(int kind)
 	else if (kind == BOSSROOM) {
 		m_BGTexture = m_Renderer->CreatePngTexture("./textures/BossRoom.png");
 	}
-}
-
-void ScnMgr::RecvDataToObject(recvData rData) {
-	m_Objects[rData.idx_num]->SetPos(rData.posX, rData.posY, rData.posZ);
-	m_Objects[rData.idx_num]->SetVel(rData.VelX, rData.VelY, rData.VelZ);
-	m_Objects[rData.idx_num]->SetKind(rData.type);
-
-	//디버깅용 출력코드
-	printf("Pos : %f %f %f, Vel : %f %f %f, type: %d, idx_num : %d\n",
-		rData.posX, rData.posY, rData.posZ,
-		rData.VelX, rData.VelY, rData.VelZ,
-		rData.type, rData.idx_num);
 }
