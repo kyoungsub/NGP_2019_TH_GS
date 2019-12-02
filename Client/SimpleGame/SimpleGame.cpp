@@ -124,16 +124,16 @@ DWORD WINAPI SendThread(LPVOID arg)
 		if (g_KeyD) {
 			buf[3] = TRUE;
 		}
-		if (g_Shoot == SHOOT_UP) {
+		if (g_Shoot == SHOOT_LEFT) {
 			buf[4] = TRUE;
 		}
-		if (g_Shoot == SHOOT_DOWN) {
+		if (g_Shoot == SHOOT_RIGHT) {
 			buf[5] = TRUE;
 		}
-		if (g_Shoot == SHOOT_LEFT) {
+		if (g_Shoot == SHOOT_UP) {
 			buf[6] = TRUE;
 		}
-		if (g_Shoot == SHOOT_RIGHT) {
+		if (g_Shoot == SHOOT_DOWN) {
 			buf[7] = TRUE;
 		}
 
@@ -160,6 +160,8 @@ DWORD WINAPI SendThread(LPVOID arg)
 		len = sizeof(buf);
 		retval = send(sock, (char*)&len, sizeof(int), 0);
 		retval = send(sock, buf, len, 0);
+
+		Sleep(16);
 
 	}
 

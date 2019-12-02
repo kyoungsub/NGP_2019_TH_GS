@@ -132,15 +132,13 @@ DWORD WINAPI RecvSendThread(LPVOID arg)
 		retval = recvn(client_sock, (char *)& len, sizeof(int), 0);
 		retval = recvn(client_sock, buf, len, 0);
 
-		if (eTime >= 0.0015f) {
-			if (player_num == 0) {
-				for (int i = 0; i < len; ++i)
-					player1Event.push_back(buf[i]);
-			}
-			else if (player_num == 1) {
-				for (int i = 0; i < len; ++i)
-					player2Event.push_back(buf[i]);
-			}
+		if (player_num == 0) {
+			for (int i = 0; i < len; ++i)
+				player1Event.push_back(buf[i]);
+		}
+		else if (player_num == 1) {
+			for (int i = 0; i < len; ++i)
+				player2Event.push_back(buf[i]);
 		}
 
 		SetEvent(wait_Recv[player_num]);
@@ -172,14 +170,30 @@ DWORD WINAPI GameLogicThread(LPVOID arg)
 		//WaitForMultipleObjects(2, wait_Recv, TRUE, INFINITE);
 		WaitForSingleObject(wait_Recv[0], INFINITE);
 
+		// Calc Elapsed Time
+		if (g_PrevTime == 0) {
+			g_PrevTime = GetTickCount();
+			return 0;
+		}
+		DWORD CurTime = GetTickCount();
+		DWORD ElapsedTime = CurTime - g_PrevTime;
+		g_PrevTime = CurTime;
+
+		eTime = (float)ElapsedTime / 1000.0f;
+
+		// Calc Shoot Delay
+		DWORD ShootCurTime = GetTickCount();
+		ShootElapsedTime = ShootCurTime - g_ShootStartTime;
+
 		//Apply Force
 		float forceX = 0.0f;
 		float forceY = 0.0f;
 		float forceZ = 0.0f;
 		float amount = 1.0f;
 		float zAmount = 20.0f;
+		int bulletID = SHOOT_NONE;
 
-		//WASD위아래왼쪽오른쪽
+		//WASD왼쪽오른쪽위아래
 		if (player1Event.size() != 0) {
 			forceY += amount * player1Event.front();
 			player1Event.pop_front();
@@ -191,11 +205,18 @@ DWORD WINAPI GameLogicThread(LPVOID arg)
 			player1Event.pop_front();
 			g_ScnMgr->ApplyForce(forceX, forceY, forceZ, HERO_ID, eTime);
 
-			std::cout << forceX << forceY << std::endl;
-
-			//총알키값 받았다 치자
-			for (int i = 0; i < 4; i++)
+			//총알키값
+			for (int i = 0; i < 4; i++) {
+				if (player1Event.front() == TRUE)
+					bulletID = i + 1;
 				player1Event.pop_front();
+			}
+			if (ShootElapsedTime % 50 == 0) { // Shoot
+				g_ScnMgr->Shoot(HERO_ID, bulletID);
+				printf("bulletID : %d \n", bulletID);
+			}
+
+
 		}
 
 		//종료시 Send 시작
@@ -245,7 +266,7 @@ int main(int argc, char* argv[])
 
 	wait_Send = CreateEvent(NULL, FALSE, FALSE, NULL);
 
-	while (recvsendHandle[1] == NULL) {
+	while (1) {
 		// accept()
 		addrlen = sizeof(clientaddr);
 		client_sock = accept(listen_sock, (SOCKADDR*)& clientaddr, &addrlen);
@@ -266,25 +287,6 @@ int main(int argc, char* argv[])
 		}
 	}
 
-	//Server ElaspedTime
-	while (1) {
-		// Calc Elapsed Time
-		if (g_PrevTime == 0) {
-			g_PrevTime = GetTickCount();
-			return 0;
-		}
-		DWORD CurTime = GetTickCount();
-		DWORD ElapsedTime = CurTime - g_PrevTime;
-		g_PrevTime = CurTime;
-
-		eTime = (float)ElapsedTime / 1000.0f;
-
-		printf("%f \n", eTime);
-
-		// Calc Shoot Delay
-		DWORD ShootCurTime = GetTickCount();
-		ShootElapsedTime = ShootCurTime - g_ShootStartTime;
-	}
 
 	// closesocket()
 	closesocket(listen_sock);

@@ -272,7 +272,7 @@ int ScnMgr::FindEmptyObjectSlot()
 	return -1;
 }
 
-void ScnMgr::Shoot(int shootID)
+void ScnMgr::Shoot(int player, int shootID)
 {
 	if (shootID == SHOOT_NONE) {
 		return;
@@ -309,10 +309,10 @@ void ScnMgr::Shoot(int shootID)
 	}
 
 	float pX, pY, pZ;
-	m_Objects[HERO_ID]->GetPos(&pX, &pY, &pZ);
+	m_Objects[player]->GetPos(&pX, &pY, &pZ);
 
 	float vX, vY, vZ;
-	m_Objects[HERO_ID]->GetVel(&vX, &vY, &vZ);
+	m_Objects[player]->GetVel(&vX, &vY, &vZ);
 
 	bvX = bvX + vX;
 	bvY = bvY + vY;

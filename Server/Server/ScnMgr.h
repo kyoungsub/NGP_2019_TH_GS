@@ -28,11 +28,10 @@ public:
 	void AddObject(float x, float y, float z, float sx, float sy, float sz, float vx, float vy, float vz, int kind, int hp, int state);
 	void DeleteObject(int id);
 	void DeleteUI(int id);
-	void AddPlayer(float x, float y, float z, float vx, float vy, float vz);
 
 	int FindEmptyObjectSlot();
 
-	void Shoot(int shootID);
+	void Shoot(int player, int shootID);
 
 	void DoCollisionTest();
 	bool RRCollision(float minX, float minY, float minZ, float maxX, float maxY, float maxZ, float minX1, float minY1, float minZ1, float maxX1, float maxY1, float maxZ1);
