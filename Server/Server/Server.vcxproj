@@ -126,7 +126,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Boss.h" />
-    <ClInclude Include="Datastruct.h" />
     <ClInclude Include="Effect.h" />
     <ClInclude Include="Global.h" />
     <ClInclude Include="Monster.h" />

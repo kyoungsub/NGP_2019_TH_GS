@@ -4,10 +4,9 @@
 #pragma comment(lib, "ws2_32")
 #include <winsock2.h>
 #include <stdlib.h>
-#include <stdio.h>
-#include<iostream>
 #include<io.h>
 #include<fcntl.h>
+#include <list>
 
 #include "stdafx.h"
 #include "Global.h"
@@ -17,14 +16,17 @@
 #define BUFSIZE 1024
 
 Object g_Object[MAX_OBJECTS];
-int player1 = 0;		//1P = 0, 2P = 1의 값을 받음
-u_short player2Port;
+std::list<char> player1Event;
+std::list<char> player2Event;
 
-HANDLE RecvHandle[2];
-HANDLE SendHandle;
+HANDLE recvsendHandle[2];
+HANDLE gameLogicHandle;
 
-HANDLE wait_Recv;
+HANDLE wait_Recv[2];
 HANDLE wait_Send;
+
+int player1ID;
+int player2ID;
 
 // 소켓 함수 오류 출력 후 종료
 void err_quit(const char* msg)
@@ -73,12 +75,8 @@ int recvn(SOCKET s, char* buf, int len, int flags)
 	return (len - left);
 }
 
-void Update() {
-
-}
-
 //송신 스레드
-DWORD WINAPI RecvThread(LPVOID arg)
+DWORD WINAPI RecvSendThread(LPVOID arg)
 {
 	int retval;
 	SOCKET client_sock = (SOCKET)arg;
@@ -86,50 +84,89 @@ DWORD WINAPI RecvThread(LPVOID arg)
 	int addrlen;
 	int len;
 	char buf[BUFSIZE];
-	InitData* initial_data = nullptr;
-	RecvSendData* RS_data = nullptr;
+	int player_num;
 
 	addrlen = sizeof(client_sock);
 	getpeername(client_sock, (SOCKADDR*)& clientaddr, &addrlen);
-	
-	while (1) {
-		WaitForSingleObject(wait_Send, INFINITE);
 
-		//data 받기
-		retval = recvn(client_sock, (char *)& len, sizeof(int), 0);
-		//if (retval == SOCKET_ERROR) err_display("recv()");
-		retval = recvn(client_sock, buf, len, 0);
-		//if (retval == SOCKET_ERROR) err_display("recv()");
-
-		
-		SetEvent(wait_Recv);
+	if (GetCurrentThreadId() == player1ID) {
+		g_Object[HERO_ID].SetPos(-0.5f, 0.0f, 0.0f);
+		g_Object[HERO_ID].SetVel(0.f, 0.f, 0.f);
+		g_Object[HERO_ID].SetAcc(0.0f, 0.0f, 0.0f);
+		g_Object[HERO_ID].SetSize(0.6f, 0.6f, 0.6f);
+		g_Object[HERO_ID].SetMass(0.15f);
+		g_Object[HERO_ID].SetCoefFrict(0.5f);
+		g_Object[HERO_ID].SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+		g_Object[HERO_ID].SetKind(KIND_HERO);
+		g_Object[HERO_ID].SetHP(240);
+		g_Object[HERO_ID].SetState(STATE_GROUND);
+		player_num = HERO_ID;
+	}
+	else if (GetCurrentThreadId() == player2ID) {
+		g_Object[HERO_ID2].SetPos(0.5f, 0.0f, 0.0f);
+		g_Object[HERO_ID2].SetVel(0.f, 0.f, 0.f);
+		g_Object[HERO_ID2].SetAcc(0.0f, 0.0f, 0.0f);
+		g_Object[HERO_ID2].SetSize(0.6f, 0.6f, 0.6f);
+		g_Object[HERO_ID2].SetMass(0.15f);
+		g_Object[HERO_ID2].SetCoefFrict(0.5f);
+		g_Object[HERO_ID2].SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+		g_Object[HERO_ID2].SetKind(KIND_HERO);
+		g_Object[HERO_ID2].SetHP(240);
+		g_Object[HERO_ID2].SetState(STATE_GROUND);
+		player_num = HERO_ID2;
 	}
 
+	while (1) {
+		//data 받기
+		retval = recvn(client_sock, (char *)& len, sizeof(int), 0);
+		if (retval == SOCKET_ERROR) err_display("recv()");
+		retval = recvn(client_sock, buf, len, 0);
+		if (retval == SOCKET_ERROR) err_display("recv()");
+
+		if (player_num == 0) {
+			for (int i = 0; i < len; ++i)
+				player1Event.push_back(buf[i]);
+		}
+		else if (player_num == 1) {
+			for (int i = 0; i < len; ++i)
+				player2Event.push_back(buf[i]);
+		}
+
+		SetEvent(wait_Recv[player_num]);
+
+		/////////////////////////////SEND
+		WaitForSingleObject(wait_Send, INFINITE);
+
+		//while (len > 0) {
+		//	memcpy(RS_data, buf + len, sizeof(RecvSendData));
+		//}
+
+		retval = send(client_sock, (char*)& len, sizeof(int), 0);
+		retval = send(client_sock, buf, len, 0);
+
+
+	}
 	return 0;
 }
 
-DWORD WINAPI SendThread(LPVOID arg)
+DWORD WINAPI GameLogicThread(LPVOID arg)
 {
-	int retval;
-	SOCKET client_sock = (SOCKET)arg;
-	SOCKADDR_IN clientaddr;
-	int addrlen;
-	int len;
+	//initialize boss data
+	//Boss data = g_Object[3]
 
-	RecvSendData SendData;
-	SendData.idx_num = 0;
-
-	addrlen = sizeof(client_sock);
-	getpeername(client_sock, (SOCKADDR*)& clientaddr, &addrlen);
+	//보스갱신및 충돌체크
 	while (1) {
-		WaitForSingleObject(wait_Recv, INFINITE);
+		//Recv가 끝나면 시작
+		WaitForMultipleObjects(2, wait_Recv, TRUE, INFINITE);
 
-		
+
+		//종료시 Send 시작
 		SetEvent(wait_Send);
 	}
 
 	return 0;
 }
+
 
 
 int main(int argc, char* argv[])
@@ -163,6 +200,13 @@ int main(int argc, char* argv[])
 	SOCKADDR_IN clientaddr;
 	int addrlen;
 
+	gameLogicHandle = CreateThread(NULL, 0, GameLogicThread, NULL, 0, NULL);
+
+	wait_Recv[0] = CreateEvent(NULL, FALSE, FALSE, NULL);
+	wait_Recv[1] = CreateEvent(NULL, FALSE, FALSE, NULL);
+
+	wait_Send = CreateEvent(NULL, FALSE, FALSE, NULL);
+
 	while (1) {
 		// accept()
 		addrlen = sizeof(clientaddr);
@@ -171,9 +215,17 @@ int main(int argc, char* argv[])
 			err_display("accept()");
 			break;
 		}
-
 		// 접속한 클라이언트 정보 출력
-		printf("\n[TCP 서버] 클라이언트 접속: IP 주소=%s, 포트 번호=%d\n",inet_ntoa(clientaddr.sin_addr), ntohs(clientaddr.sin_port));
+		printf("\n[TCP 서버] 클라이언트 접속: IP 주소=%s, 포트 번호=%d\n", inet_ntoa(clientaddr.sin_addr), ntohs(clientaddr.sin_port));
+
+		if (recvsendHandle[0] == NULL) {
+			recvsendHandle[0] = CreateThread(NULL, 0, RecvSendThread, (LPVOID)client_sock, 0, NULL);
+			player1ID = GetThreadId(recvsendHandle[0]);
+		}
+		else if (recvsendHandle[1] == NULL) {
+			recvsendHandle[1] = CreateThread(NULL, 0, RecvSendThread, (LPVOID)client_sock, 0, NULL);
+			player2ID = GetThreadId(recvsendHandle[1]);
+		}
 
 	}
 

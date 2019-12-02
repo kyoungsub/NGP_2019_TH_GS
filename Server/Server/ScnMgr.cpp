@@ -21,280 +21,12 @@ BOOL PLAY = TRUE;
 
 ScnMgr::ScnMgr()
 {
-	/*
-	m_Renderer = NULL;
-
-	// Init Objects List
-	for (int i = 0; i < MAX_OBJECTS; ++i) {
-		m_Objects[i] = NULL;
-	}
-
-	// Init Renderer
-	m_Renderer = new Renderer(WINDOWS_WIDTH, WINDOWS_HEIGHT);
-
-	// Init Sound
-	m_Sound = new Sound();
-
-	m_SoundBG = m_Sound->CreateSound("./Sounds/The Binding of Isaac - Sacrificial.mp3");
-	m_SoundTearsFire = m_Sound->CreateSound("./Sounds/Tears_Fire_0.mp3");
-	m_SoundTearsImpacts = m_Sound->CreateSound("./Sounds/TearImpacts0.mp3");
-	m_SoundHurt = m_Sound->CreateSound("./Sounds/Isaac_Hurt_Grunt0.mp3");
-	m_SoundExplosion = m_Sound->CreateSound("./Sounds/Death_Burst_Large_0.mp3");
-	m_SoundPlop = m_Sound->CreateSound("./Sounds/plop.mp3");
-	m_SoundCough = m_Sound->CreateSound("./Sounds/Wheezy_Cough_1.mp3");
-	m_SoundWin = m_Sound->CreateSound("./Sounds/Holy.mp3");
-	m_SoundDeath = m_Sound->CreateSound("./Sounds/isaacdies.mp3");
-
-	m_Sound->PlaySound(m_SoundBG, true, 0.3f);
-
-	// Load Texture
-	m_BGTexture = m_Renderer->CreatePngTexture("./textures/Basement01.png");
-	m_CharacterTexture = m_Renderer->CreatePngTexture("./textures/isaac.png");
-	m_BulletTexture = m_Renderer->CreatePngTexture("./textures/effect_015_tearpoofa.png");
-	m_MonsterTexture = m_Renderer->CreatePngTexture("./textures/monster_001_pooter.png");
-	m_BossTexture = m_Renderer->CreatePngTexture("./textures/boss_007_dukeofflies.png");
-	m_PoopTexture = m_Renderer->CreatePngTexture("./textures/grid_poop_1.png");
-	m_HPTexture = m_Renderer->CreatePngTexture("./textures/ui_hearts.png");
-	m_WinTexture = m_Renderer->CreatePngTexture("./textures/loadimages-002.png");
-	m_DeathTexture = m_Renderer->CreatePngTexture("./textures/deathposter.png");
-	m_BossDoorTexture = m_Renderer->CreatePngTexture("./textures/BossDoor.png");
-
-	// Creat Hero Object
-	m_Objects[HERO_ID] = new Object();
-	m_Objects[HERO_ID]->SetPos(0.0f, 0.0f, 0.0f);
-	m_Objects[HERO_ID]->SetVel(0.0f, 0.0f, 0.0f);
-	m_Objects[HERO_ID]->SetAcc(0.0f, 0.0f, 0.0f);
-	m_Objects[HERO_ID]->SetSize(0.6f, 0.6f, 0.6f);
-	m_Objects[HERO_ID]->SetMass(0.15f);
-	m_Objects[HERO_ID]->SetCoefFrict(0.5f);
-	m_Objects[HERO_ID]->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
-	m_Objects[HERO_ID]->SetKind(KIND_HERO);
-	m_Objects[HERO_ID]->SetHP(240);
-	m_Objects[HERO_ID]->SetState(STATE_GROUND);
-
-	// Creat Poop Object
-	AddObject(3.0f, -2.0f, 0.0f, 0.55f, 0.55f, 0.55f, 0.0f, 0.0f, 0.0f, KIND_POOP, 100, STATE_GROUND);
-
-	// Creat BossDoor Object
-	AddObject(0.0f, 1.35f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, KIND_BOSS_DOOR, 100, STATE_GROUND);
-
-	// Creat HP UI
-	m_HP[0] = new UI();
-	m_HP[0]->SetPos(2.4f, 2.5f, 0.0f);
-	m_HP[0]->SetSize(0.3f, 0.3f, 0.3f);
-	m_HP[0]->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
-	m_HP[0]->SetKind(KIND_HP);
-	m_HP[0]->SetHP(80);
-	m_HP[0]->SetState(STATE_GROUND);
-
-	m_HP[1] = new UI();
-	m_HP[1]->SetPos(2.7f, 2.5f, 0.0f);
-	m_HP[1]->SetSize(0.3f, 0.3f, 0.3f);
-	m_HP[1]->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
-	m_HP[1]->SetKind(KIND_HP);
-	m_HP[1]->SetHP(80);
-	m_HP[1]->SetState(STATE_GROUND);
-
-	m_HP[2] = new UI();
-	m_HP[2]->SetPos(3.0f, 2.5f, 0.0f);
-	m_HP[2]->SetSize(0.3f, 0.3f, 0.3f);
-	m_HP[2]->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
-	m_HP[2]->SetKind(KIND_HP);
-	m_HP[2]->SetHP(80);
-	m_HP[2]->SetState(STATE_GROUND);
-	*/
 }
 
 ScnMgr::~ScnMgr()
 {
-	/*
-	if (m_Renderer) {
-		delete m_Renderer;
-		m_Renderer = NULL;
-	}
-
-	if (m_Objects[HERO_ID]) {
-		delete[] m_Objects;
-		for (int i = 0; i < HERO_ID; ++i) {
-			m_Objects[i] = NULL;
-		}
-	}
-	*/
 }
-/*
-void ScnMgr::RenderScene()
-{
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glClearColor(0.0f, 0.3f, 0.3f, 1.0f);
 
-	// Render BG
-	m_Renderer->DrawTextureRectDepth(0, 0, 0, WINDOWS_WIDTH, WINDOWS_HEIGHT, 1, 1, 1, 1, m_BGTexture, 1.f);
-
-	// Render Object
-	for (int i = 0; i < MAX_OBJECTS; ++i) {
-		if (m_Objects[i] != NULL) {
-			float x, y, z, sizeX, sizeY, sizeZ, r, g, b, a;
-
-			m_Objects[i]->GetPos(&x, &y, &z);
-			m_Objects[i]->GetSize(&sizeX, &sizeY, &sizeZ);
-			m_Objects[i]->GetColor(&r, &g, &b, &a);
-
-			float newX, newY, newZ, newsX, newsY, newsZ;
-
-			newX = x * 100;
-			newY = y * 100;
-			newZ = z * 100;
-
-			newsX = sizeX * 100;
-			newsY = sizeY * 100;
-			newsZ = sizeZ * 100;
-
-			int kind;
-
-			m_Objects[i]->GetKind(&kind);
-
-			if (kind == KIND_HERO) {
-				m_Renderer->DrawTextureRectHeight(
-					newX, newY, 0.0f,
-					newsX, newsY,
-					r, g, b, a,
-					m_CharacterTexture, newZ
-				);
-			}
-			else if (kind == KIND_BULLET) {
-				m_Renderer->DrawTextureRectSeqXY(
-					newX, newY, 0.0f,
-					newsX, newsY,
-					r, g, b, a,
-					m_BulletTexture, 0, 0,
-					4, 4
-				);
-			}
-			else if (kind == KIND_MONSTER) {
-				int SeqX, SeqY;
-
-				dynamic_cast<Monster*>(m_Objects[i])->GetSeqX(&SeqX);
-				dynamic_cast<Monster*>(m_Objects[i])->GetSeqY(&SeqY);
-
-				m_Renderer->DrawTextureRectSeqXY(
-					newX, newY, 0.0f,
-					newsX, newsY,
-					r, g, b, a,
-					m_MonsterTexture, SeqX, SeqY,
-					4, 4
-				);
-			}
-			else if (kind == KIND_BOSS) {
-				int SeqX, SeqY;
-
-				dynamic_cast<Boss*>(m_Objects[i])->GetSeqX(&SeqX);
-				dynamic_cast<Boss*>(m_Objects[i])->GetSeqY(&SeqY);
-
-				m_Renderer->DrawTextureRectSeqXY(
-					newX, newY, 0.0f,
-					newsX, newsY,
-					r, g, b, a,
-					m_BossTexture, SeqX, SeqY,
-					2, 2
-				);
-			}
-			else if (kind == KIND_POOP) {
-				m_Renderer->DrawTextureRectSeqXY(
-					newX, newY, 0.0f,
-					newsX, newsY,
-					r, g, b, a,
-					m_PoopTexture, Poop_seq, 0,
-					5, 1
-				);
-			}
-			else if (kind == KIND_BOSS_DOOR) {
-				m_Renderer->DrawTextureRectHeight(
-					newX, newY, -1.5f,
-					newsX, newsY,
-					r, g, b, a,
-					m_BossDoorTexture, newZ
-				);
-			}
-			else if (kind == KIND_EFFECT) {
-				int SeqX, SeqY;
-
-				dynamic_cast<Effect*>(m_Objects[i])->GetSeqX(&SeqX);
-				dynamic_cast<Effect*>(m_Objects[i])->GetSeqY(&SeqY);
-
-				m_Renderer->DrawTextureRectSeqXY(
-					newX, newY, 0.0f,
-					newsX, newsY,
-					r, g, b, a,
-					m_BulletTexture, SeqX, SeqY,
-					4, 4
-				);
-			}
-			else if (kind == KIND_WIN) {
-				m_Renderer->DrawTextureRectDepth(
-					0.0f, 0.0f, 0.0f,
-					WINDOWS_WIDTH * 0.75f, WINDOWS_HEIGHT * 0.75f,
-					1, 1, 1, 1,
-					m_WinTexture, 0.0f
-				);
-			}
-			else if (kind == kIND_DEATH) {
-				m_Renderer->DrawTextureRectDepth(
-					0.0f, 0.0f, 0.0f,
-					WINDOWS_WIDTH * 0.75f, WINDOWS_HEIGHT * 0.75f,
-					1, 1, 1, 1,
-					m_DeathTexture, 0.0f
-				);
-			}
-
-			int hp;
-			float gauge;
-
-			m_Objects[i]->GetHP(&hp);
-			gauge = hp / 200.0f;
-
-			if (kind == KIND_BOSS) {
-				m_Renderer->DrawSolidRectGauge(
-					0.0f, newsY + 75.0f, 0,
-					newsX * 3, 10,
-					1, 0, 0, 1,
-					newZ,
-					gauge);
-			}
-		}
-	}
-	for (int i = 0; i < 3; ++i) {
-		if (m_HP[i] != NULL) {
-			float x, y, z, sizeX, sizeY, sizeZ, r, g, b, a;
-
-			m_HP[i]->GetPos(&x, &y, &z);
-			m_HP[i]->GetSize(&sizeX, &sizeY, &sizeZ);
-			m_HP[i]->GetColor(&r, &g, &b, &a);
-
-			float newX, newY, newZ, newsX, newsY, newsZ;
-
-			newX = x * 100;
-			newY = y * 100;
-			newZ = z * 100;
-
-			newsX = sizeX * 100;
-			newsY = sizeY * 100;
-			newsZ = sizeZ * 100;
-
-			int SeqX;
-			dynamic_cast<UI*>(m_HP[i])->GetSeqX(&SeqX);
-
-			m_Renderer->DrawTextureRectSeqXY(
-				newX, newY, 0.0f,
-				newsX, newsY,
-				r, g, b, a,
-				m_HPTexture, SeqX, 0,
-				5, 2
-			);
-		}
-	}
-	g_time += 0.01f;
-}
-*/
 void ScnMgr::Update(float eTime)
 {
 	int kind;
@@ -357,7 +89,6 @@ void ScnMgr::GarbageCollector()
 				if (hp <= 0) {
 					DeleteObject(i);
 					AddObject(0.0f, -0.5f, 0.0f, 4.0f, 4.0f, 4.0f, 0.0f, 0.0f, 0.0f, kIND_DEATH, 20, STATE_GROUND);
-					//m_Sound->PlaySound(m_SoundDeath, false, 0.5f);
 					PLAY = FALSE;
 					continue;
 				}
@@ -366,8 +97,6 @@ void ScnMgr::GarbageCollector()
 				if (hp <= 0) {
 					DeleteObject(i);
 					AddObject(0.0f, -0.5f, 0.0f, 4.0f, 4.0f, 4.0f, 0.0f, 0.0f, 0.0f, KIND_WIN, 20, STATE_GROUND);
-					//m_Sound->PlaySound(m_SoundExplosion, false, 0.5f);
-					//m_Sound->PlaySound(m_SoundWin, false, 0.5f);
 					PLAY = FALSE;
 					continue;
 				}
@@ -375,7 +104,6 @@ void ScnMgr::GarbageCollector()
 			if (kind == KIND_MONSTER) {
 				if (hp <= 0) {
 					DeleteObject(i);
-					//m_Sound->PlaySound(m_SoundExplosion, false, 0.5f);
 					continue;
 				}
 			}
@@ -391,7 +119,6 @@ void ScnMgr::GarbageCollector()
 					AddObject(px, py, pz, sx, sy, sz, 0.0f, 0.0f, 0.0f, KIND_EFFECT, 20, STATE_AIR);
 
 					DeleteObject(i);
-					//m_Sound->PlaySound(m_SoundTearsImpacts, false, 0.5f);
 					continue;
 				}
 				if (x > 3.0f || x < -3.0f || y > 1.0f || y < -2.0f) {
@@ -540,33 +267,8 @@ void ScnMgr::AddPlayer(float x, float y, float z, float vx, float vy, float vz) 
 		m_Objects[HERO_ID]->SetKind(KIND_HERO);
 		m_Objects[HERO_ID]->SetHP(240);
 		m_Objects[HERO_ID]->SetState(STATE_GROUND);
-
-		m_Objects[HERO_ID2] = new Object();
-		m_Objects[HERO_ID2]->SetPos(-x, -y, -z);
-		m_Objects[HERO_ID2]->SetVel(0.f, 0.f, 0.f);
-		m_Objects[HERO_ID2]->SetAcc(0.0f, 0.0f, 0.0f);
-		m_Objects[HERO_ID2]->SetSize(0.6f, 0.6f, 0.6f);
-		m_Objects[HERO_ID2]->SetMass(0.15f);
-		m_Objects[HERO_ID2]->SetCoefFrict(0.5f);
-		m_Objects[HERO_ID2]->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
-		m_Objects[HERO_ID2]->SetKind(KIND_HERO);
-		m_Objects[HERO_ID2]->SetHP(240);
-		m_Objects[HERO_ID2]->SetState(STATE_GROUND);
 	}
 	else if (x == 0.5f) {
-		player1 = FALSE;
-		m_Objects[HERO_ID] = new Object();
-		m_Objects[HERO_ID]->SetPos(x, y, z);
-		m_Objects[HERO_ID]->SetVel(0.f, 0.f, 0.f);
-		m_Objects[HERO_ID]->SetAcc(0.0f, 0.0f, 0.0f);
-		m_Objects[HERO_ID]->SetSize(0.6f, 0.6f, 0.6f);
-		m_Objects[HERO_ID]->SetMass(0.15f);
-		m_Objects[HERO_ID]->SetCoefFrict(0.5f);
-		m_Objects[HERO_ID]->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
-		m_Objects[HERO_ID]->SetKind(KIND_HERO);
-		m_Objects[HERO_ID]->SetHP(240);
-		m_Objects[HERO_ID]->SetState(STATE_GROUND);
-
 		m_Objects[HERO_ID2] = new Object();
 		m_Objects[HERO_ID2]->SetPos(-x, -y, -z);
 		m_Objects[HERO_ID2]->SetVel(0.f, 0.f, 0.f);
