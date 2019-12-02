@@ -86,6 +86,92 @@ int recvn(SOCKET s, char* buf, int len, int flags)
 	return (len - left);
 }
 
+//송신 스레드
+DWORD WINAPI RecvThread(LPVOID arg)
+{
+	int retval;
+	SOCKET client_sock = (SOCKET)arg;
+	SOCKADDR_IN clientaddr;
+	int addrlen;
+	int len;
+	char buf[BUFSIZE];
+	
+	addrlen = sizeof(client_sock);
+	getpeername(client_sock, (SOCKADDR*)& clientaddr, &addrlen);
+
+	while (1) {
+		
+	}
+
+	return 0;
+}
+
+DWORD WINAPI SendThread(LPVOID arg)
+{
+	int retval;
+	SOCKET client_sock = (SOCKET)arg;
+	SOCKADDR_IN clientaddr;
+	int addrlen;
+	int len;
+	char buf[8];
+
+	addrlen = sizeof(client_sock);
+	getpeername(client_sock, (SOCKADDR*)& clientaddr, &addrlen);
+	while (1) {
+		if (g_KeyW) {
+			buf[0] = TRUE;
+		}
+		if (g_KeyA) {
+			buf[1] = TRUE;
+		}
+		if (g_KeyS) {
+			buf[2] = TRUE;
+		}
+		if (g_KeyD) {
+			buf[3] = TRUE;
+		}
+		if (g_Shoot == SHOOT_UP) {
+			buf[4] = TRUE;
+		}
+		if (g_Shoot == SHOOT_DOWN) {
+			buf[5] = TRUE;
+		}
+		if (g_Shoot == SHOOT_LEFT) {
+			buf[6] = TRUE;
+		}
+		if (g_Shoot == SHOOT_RIGHT) {
+			buf[7] = TRUE;
+		}
+
+		if (!g_KeyW) {
+			buf[0] = FALSE;
+		}
+		if (!g_KeyA) {
+			buf[1] = FALSE;
+		}
+		if (!g_KeyS) {
+			buf[2] = FALSE;
+		}
+		if (!g_KeyD) {
+			buf[3] = FALSE;
+		}
+		if (g_Shoot == SHOOT_NONE) {
+			buf[4] = FALSE;
+			buf[5] = FALSE;
+			buf[6] = FALSE;
+			buf[7] = FALSE;
+		}
+		
+		int retval;
+		len = sizeof(buf);
+		retval = send(client_sock, (char*)&len, sizeof(int), 0);
+		retval = send(client_sock, buf, len, 0);
+
+	}
+
+	return 0;
+}
+
 void RenderScene(int temp) {
 
 	// Calc Elapsed Time
@@ -280,6 +366,11 @@ int main(int argc, char **argv) {
 	glutSetKeyRepeat(GLUT_KEY_REPEAT_OFF);
 	// Init ScnMgr
 	g_ScnMgr = new ScnMgr();
+
+	HANDLE hThread[2];
+
+	hThread[0] = CreateThread(NULL, 0, RecvThread, NULL, 0, NULL);
+	hThread[1] = CreateThread(NULL, 0, SendThread, NULL, 0, NULL);
 
 	g_PrevTime = glutGet(GLUT_ELAPSED_TIME);
 	glutTimerFunc(16, RenderScene, 0);

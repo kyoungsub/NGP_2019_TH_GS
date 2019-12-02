@@ -13,31 +13,7 @@ class ScnMgr
 {
 private:
 	Object *m_HP[20];
-	/*
-	Renderer * m_Renderer;
-	Sound *m_Sound;
-
-	GLuint m_BGTexture = 0;
-	GLuint m_CharacterTexture = 0;
-	GLuint m_BulletTexture = 0;
-	GLuint m_MonsterTexture = 0;
-	GLuint m_BossTexture = 0;
-	GLuint m_PoopTexture = 0;
-	GLuint m_HPTexture = 0;
-	GLuint m_WinTexture = 0;
-	GLuint m_DeathTexture = 0;
-	GLuint m_BossDoorTexture = 0;
 	
-	int m_SoundBG = 0;
-	int m_SoundTearsFire = 0;
-	int m_SoundTearsImpacts = 0;
-	int m_SoundHurt = 0;
-	int m_SoundExplosion = 0;
-	int m_SoundPlop = 0;
-	int m_SoundCough = 0;
-	int m_SoundWin = 0;
-	int m_SoundDeath = 0;
-	*/
 public:
 
 	Object *m_Objects[MAX_OBJECTS];
@@ -46,7 +22,6 @@ public:
 	ScnMgr();
 	~ScnMgr();
 
-	void RenderScene();
 	void Update(float eTime);
 	void GarbageCollector();
 	void ApplyForce(float x, float y, float z, float eTime);
