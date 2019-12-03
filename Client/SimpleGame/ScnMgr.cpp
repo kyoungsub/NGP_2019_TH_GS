@@ -58,25 +58,6 @@ ScnMgr::ScnMgr()
 	m_DeathTexture = m_Renderer->CreatePngTexture("./textures/deathposter.png");
 	m_BossDoorTexture = m_Renderer->CreatePngTexture("./textures/BossDoor.png");
 
-	// Creat Hero Object
-	m_Objects[HERO_ID] = new Object();
-	m_Objects[HERO_ID]->SetPos(0.0f, 0.0f, 0.0f);
-	m_Objects[HERO_ID]->SetVel(0.0f, 0.0f, 0.0f);
-	m_Objects[HERO_ID]->SetAcc(0.0f, 0.0f, 0.0f);
-	m_Objects[HERO_ID]->SetSize(0.6f, 0.6f, 0.6f);
-	m_Objects[HERO_ID]->SetMass(0.15f);
-	m_Objects[HERO_ID]->SetCoefFrict(0.5f);
-	m_Objects[HERO_ID]->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
-	m_Objects[HERO_ID]->SetKind(KIND_HERO);
-	m_Objects[HERO_ID]->SetHP(240);
-	m_Objects[HERO_ID]->SetState(STATE_GROUND);
-
-	// Creat Poop Object
-	AddObject(3.0f, -2.0f, 0.0f, 0.55f, 0.55f, 0.55f, 0.0f, 0.0f, 0.0f, KIND_POOP, 100, STATE_GROUND);
-
-	// Creat BossDoor Object
-	AddObject(0.0f, 1.35f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, KIND_BOSS_DOOR, 100, STATE_GROUND);
-
 	// Creat HP UI
 	m_HP[0] = new UI();
 	m_HP[0]->SetPos(2.4f, 2.5f, 0.0f);
@@ -471,36 +452,30 @@ void ScnMgr::ApplyForce(float x, float y, float z, float eTime)
 	}
 }
 
-void ScnMgr::AddObject(float x, float y, float z, float sx, float sy, float sz, float vx, float vy, float vz, int kind, int hp, int state)
+void ScnMgr::AddObject(float x, float y, float z, float sx, float sy, float sz, float vx, float vy, float vz, int kind, int hp, int idx_num)
 {
-	int id = FindEmptyObjectSlot();
-
-	if (id < 0) {
-		return;
-	}
-
 	if (kind == KIND_MONSTER) {
-		m_Objects[id] = new Monster();
+		m_Objects[idx_num] = new Monster();
 	}
 	else if (kind == KIND_BOSS) {
-		m_Objects[id] = new Boss();
+		m_Objects[idx_num] = new Boss();
 	}
 	else if (kind == KIND_EFFECT) {
-		m_Objects[id] = new Effect();
+		m_Objects[idx_num] = new Effect();
 	}
 	else {
-		m_Objects[id] = new Object();
+		m_Objects[idx_num] = new Object();
 	}
 
-	m_Objects[id]->SetPos(x, y, z);
-	m_Objects[id]->SetVel(vx, vy, vz);
-	m_Objects[id]->SetAcc(0.0f, 0.0f, 0.0f);
-	m_Objects[id]->SetSize(sx, sy, sz);
-	m_Objects[id]->SetMass(0.2f);
-	m_Objects[id]->SetCoefFrict(5.0f);
-	m_Objects[id]->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
-	m_Objects[id]->SetKind(kind);
-	m_Objects[id]->SetHP(hp);
+	m_Objects[idx_num]->SetPos(x, y, z);
+	m_Objects[idx_num]->SetVel(vx, vy, vz);
+	m_Objects[idx_num]->SetAcc(0.0f, 0.0f, 0.0f);
+	m_Objects[idx_num]->SetSize(sx, sy, sz);
+	m_Objects[idx_num]->SetMass(0.2f);
+	m_Objects[idx_num]->SetCoefFrict(5.0f);
+	m_Objects[idx_num]->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+	m_Objects[idx_num]->SetKind(kind);
+	m_Objects[idx_num]->SetHP(hp);
 
 }
 

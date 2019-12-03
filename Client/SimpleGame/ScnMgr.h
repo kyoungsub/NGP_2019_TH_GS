@@ -50,7 +50,7 @@ public:
 	void GarbageCollector();
 	void ApplyForce(float x, float y, float z, float eTime);
 
-	void AddObject(float x, float y, float z, float sx, float sy, float sz, float vx, float vy, float vz, int kind, int hp, int state);
+	void AddObject(float x, float y, float z, float sx, float sy, float sz, float vx, float vy, float vz, int kind, int hp, int idx_num);
 	void DeleteObject(int id);
 	void DeleteUI(int id);
 	void AddPlayer(float x, float y, float z, float vx, float vy, float vz);
