@@ -231,6 +231,8 @@ DWORD WINAPI GameLogicThread(LPVOID arg)
 			}
 		}
 
+		g_ScnMgr->GarbageCollector();   // 화면 밖으로 나가는 오브젝트 삭제
+		g_ScnMgr->DoCollisionTest();
 		g_ScnMgr->Update(eTime);
 
 		//종료시 Send 시작
