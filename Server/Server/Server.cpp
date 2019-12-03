@@ -25,7 +25,7 @@ HANDLE recvsendHandle[2];
 HANDLE gameLogicHandle;
 
 HANDLE wait_Recv[2];
-HANDLE wait_Send;
+HANDLE wait_Send[2];
 
 DWORD g_PrevTime = 0;
 DWORD g_ShootStartTime = 0;
@@ -143,8 +143,10 @@ DWORD WINAPI RecvSendThread(LPVOID arg)
 
 		SetEvent(wait_Recv[player_num]);
 
+		std::cout << player_num << "recv_end" << std::endl;
+
 		/////////////////////////////SEND
-		WaitForSingleObject(wait_Send, INFINITE);
+		WaitForSingleObject(wait_Send[player_num], INFINITE);
 
 		int read_data = 0;
 		SendData sData;
@@ -168,7 +170,8 @@ DWORD WINAPI RecvSendThread(LPVOID arg)
 		retval = send(client_sock, (char*)& read_data, sizeof(int), 0);
 		retval = send(client_sock, buf, read_data, 0);
 
-
+		ZeroMemory(buf, read_data);
+		std::cout << player_num << "Send_end" << std::endl;
 	}
 	return 0;
 }
@@ -181,8 +184,8 @@ DWORD WINAPI GameLogicThread(LPVOID arg)
 	//보스갱신및 충돌체크
 	while (1) {
 		//Recv가 끝나면 시작
-		//WaitForMultipleObjects(2, wait_Recv, TRUE, INFINITE);
-		WaitForSingleObject(wait_Recv[0], INFINITE);
+		WaitForMultipleObjects(2, wait_Recv, TRUE, INFINITE);
+		//WaitForSingleObject(wait_Recv[0], INFINITE);
 
 		// Calc Elapsed Time
 		if (g_PrevTime == 0) {
@@ -200,24 +203,23 @@ DWORD WINAPI GameLogicThread(LPVOID arg)
 		ShootElapsedTime = ShootCurTime - g_ShootStartTime;
 
 		//Apply Force
-		float forceX = 0.0f;
-		float forceY = 0.0f;
+		float forceX1 = 0.0f, forceX2 = 0.0f;
+		float forceY1 = 0.0f, forceY2 = 0.0f;
 		float forceZ = 0.0f;
 		float amount = 1.0f;
-		float zAmount = 20.0f;
 		int bulletID = SHOOT_NONE;
 
 		//WASD왼쪽오른쪽위아래
 		if (player1Event.size() != 0) {
-			forceY += amount * player1Event.front();
+			forceY1 += amount * player1Event.front();
 			player1Event.pop_front();
-			forceX -= amount * player1Event.front();
+			forceX1 -= amount * player1Event.front();
 			player1Event.pop_front();
-			forceY -= amount * player1Event.front();
+			forceY1 -= amount * player1Event.front();
 			player1Event.pop_front();
-			forceX += amount * player1Event.front();
+			forceX1 += amount * player1Event.front();
 			player1Event.pop_front();
-			g_ScnMgr->ApplyForce(forceX, forceY, forceZ, HERO_ID, eTime);
+			g_ScnMgr->ApplyForce(forceX1, forceY1, forceZ, HERO_ID, eTime);
 
 			//총알키값
 			for (int i = 0; i < 4; i++) {
@@ -230,12 +232,35 @@ DWORD WINAPI GameLogicThread(LPVOID arg)
 			}
 		}
 
+		if (player2Event.size() != 0) {
+			forceY2 += amount * player2Event.front();
+			player2Event.pop_front();
+			forceX2 -= amount * player2Event.front();
+			player2Event.pop_front();
+			forceY2 -= amount * player2Event.front();
+			player2Event.pop_front();
+			forceX2 += amount * player2Event.front();
+			player2Event.pop_front();
+			g_ScnMgr->ApplyForce(forceX2, forceY2, forceZ, HERO_ID2, eTime);
+
+			//총알키값
+			for (int i = 0; i < 4; i++) {
+				if (player2Event.front() == TRUE)
+					bulletID = i + 1;
+				player2Event.pop_front();
+			}
+			if (ShootElapsedTime % 50 == 0) { // Shoot
+				g_ScnMgr->Shoot(HERO_ID2, bulletID);
+			}
+		}
+
 		g_ScnMgr->GarbageCollector();   // 화면 밖으로 나가는 오브젝트 삭제
 		g_ScnMgr->DoCollisionTest();
 		g_ScnMgr->Update(eTime);
 
 		//종료시 Send 시작
-		SetEvent(wait_Send);
+		SetEvent(wait_Send[0]);
+		SetEvent(wait_Send[1]);
 	}
 
 	return 0;
@@ -279,7 +304,8 @@ int main(int argc, char* argv[])
 	wait_Recv[0] = CreateEvent(NULL, FALSE, FALSE, NULL);
 	wait_Recv[1] = CreateEvent(NULL, FALSE, FALSE, NULL);
 
-	wait_Send = CreateEvent(NULL, FALSE, FALSE, NULL);
+	wait_Send[0] = CreateEvent(NULL, FALSE, FALSE, NULL);
+	wait_Send[1] = CreateEvent(NULL, FALSE, FALSE, NULL);
 
 	while (1) {
 		// accept()
