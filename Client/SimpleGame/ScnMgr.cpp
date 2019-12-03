@@ -44,7 +44,7 @@ ScnMgr::ScnMgr()
 	m_SoundWin = m_Sound->CreateSound("./Sounds/Holy.mp3");
 	m_SoundDeath = m_Sound->CreateSound("./Sounds/isaacdies.mp3");
 
-	m_Sound->PlaySound(m_SoundBG, true, 0.3f);
+	//m_Sound->PlaySound(m_SoundBG, true, 0.3f);
 
 	// Load Texture
 	m_BGTexture = m_Renderer->CreatePngTexture("./textures/Basement01.png");

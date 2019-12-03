@@ -37,26 +37,11 @@
 #define SERVERPORT 9000
 #define BUFSIZE    1024
 
+//전송 구조체
 #pragma pack(1)
 struct recvData {
-	float posX, posY, posZ;
-	float VelX, VelY, VelZ;
+	float posX, posY;
 	int type, idx_num;
-};
-#pragma pack()
-
-#pragma pack(1)
-struct sendData {
-	float posX, posY, posZ;
-	float VelX, VelY, VelZ;
-	int type, idx_num;
-};
-#pragma pack()
-
-#pragma pack(1)
-struct InitData {
-	float mass;
-	float sizeX, sizeY, sizeZ;
-	float coef_Frict;
+	int hp;
 };
 #pragma pack()

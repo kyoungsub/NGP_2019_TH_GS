@@ -90,14 +90,19 @@ int recvn(SOCKET s, char* buf, int len, int flags)
 DWORD WINAPI RecvThread(LPVOID arg)
 {
 	int retval;
-	SOCKET sock = (SOCKET)arg;
+	SOCKET sock = (SOCKET)arg; 
 	int len;
-	char buf[BUFSIZE];
-	
+	float temp = 0.f;
+	char buf[BUFSIZE];	
 
+	recvData PlayerInfo;
 
 	while (1) {
+		retval = recvn(sock, (char *)&len, sizeof(int), 0);
+		retval = recvn(sock, (char*)&PlayerInfo, len, 0);		
 		
+		g_ScnMgr->m_Objects[PlayerInfo.idx_num]->SetPos(PlayerInfo.posX, PlayerInfo.posY, temp);
+		//printf("playerID: %d, %f, %f, %d, %d \n", PlayerInfo.idx_num, PlayerInfo.posX, PlayerInfo.posY, PlayerInfo.type, PlayerInfo.hp);
 	}
 
 	return 0;
@@ -206,10 +211,6 @@ void RenderScene(int temp) {
 	if (g_KeySP) {
 		forceZ += zAmount;
 	}
-
-	g_ScnMgr->ApplyForce(forceX, forceY, forceZ, eTime);
-
-	g_ScnMgr->Update(eTime);   // Update   
 
 	g_ScnMgr->RenderScene();   // Render   
 	if (ShootElapsedTime % 50 == 0) { // Shoot
