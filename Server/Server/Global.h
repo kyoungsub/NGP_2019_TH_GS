@@ -50,5 +50,6 @@ struct InitData {
 struct SendData {
 	float posX, posY;
 	int type, idx_num;
+	int hp;
 };
 #pragma pack()

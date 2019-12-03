@@ -146,11 +146,25 @@ DWORD WINAPI RecvSendThread(LPVOID arg)
 		/////////////////////////////SEND
 		WaitForSingleObject(wait_Send, INFINITE);
 
-		//int read_data = 0;
-		//while (len > 0) {
-		//	memcpy(buf + read_data, , sizeof(SendData));
-		//}
+		int read_data = 0;
+		SendData sData;
+		for(int i=0; i< MAX_OBJECTS; ++i) {
+			if (g_ScnMgr->m_Objects[i] != NULL) {
+				g_ScnMgr->m_Objects[i]->GetPos(&sData.posX, &sData.posY, 0);
+				g_ScnMgr->m_Objects[i]->GetKind(&sData.type);
+				g_ScnMgr->m_Objects[i]->GetHP(&sData.hp);
+				sData.idx_num = i;
 
+				memcpy(buf + read_data, (void*)&sData, sizeof(SendData));
+				read_data += sizeof(SendData);
+				//테스트용 코드
+				//SendData temp;
+				//memcpy((void*)& temp, buf + read_data - sizeof(SendData), sizeof(SendData));
+				//printf("%f %f, %d, %d, %d \n", temp.posX, temp.posY, temp.idx_num, temp.type, temp.hp);
+			}
+		}
+
+		len = sizeof(buf);
 		retval = send(client_sock, (char*)& len, sizeof(int), 0);
 		retval = send(client_sock, buf, len, 0);
 
@@ -213,11 +227,10 @@ DWORD WINAPI GameLogicThread(LPVOID arg)
 			}
 			if (ShootElapsedTime % 50 == 0) { // Shoot
 				g_ScnMgr->Shoot(HERO_ID, bulletID);
-				printf("bulletID : %d \n", bulletID);
 			}
-
-
 		}
+
+		g_ScnMgr->Update(eTime);
 
 		//종료시 Send 시작
 		SetEvent(wait_Send);
