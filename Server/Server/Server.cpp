@@ -148,9 +148,10 @@ DWORD WINAPI RecvSendThread(LPVOID arg)
 
 		int read_data = 0;
 		SendData sData;
+		float temp;
 		for(int i=0; i< MAX_OBJECTS; ++i) {
 			if (g_ScnMgr->m_Objects[i] != NULL) {
-				g_ScnMgr->m_Objects[i]->GetPos(&sData.posX, &sData.posY, 0);
+				g_ScnMgr->m_Objects[i]->GetPos(&sData.posX, &sData.posY, &temp);
 				g_ScnMgr->m_Objects[i]->GetKind(&sData.type);
 				g_ScnMgr->m_Objects[i]->GetHP(&sData.hp);
 				sData.idx_num = i;
