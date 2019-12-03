@@ -165,9 +165,8 @@ DWORD WINAPI RecvSendThread(LPVOID arg)
 			}
 		}
 
-		len = sizeof(buf);
-		retval = send(client_sock, (char*)& len, sizeof(int), 0);
-		retval = send(client_sock, buf, len, 0);
+		retval = send(client_sock, (char*)& read_data, sizeof(int), 0);
+		retval = send(client_sock, buf, read_data, 0);
 
 
 	}
