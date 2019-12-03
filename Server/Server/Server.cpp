@@ -25,7 +25,7 @@ HANDLE recvsendHandle[2];
 HANDLE gameLogicHandle;
 
 HANDLE wait_Recv[2];
-HANDLE wait_Send[2];
+HANDLE wait_Logic[2];
 
 DWORD g_PrevTime = 0;
 DWORD g_ShootStartTime = 0;
@@ -35,7 +35,7 @@ float eTime;
 int player1ID;
 int player2ID;
 
-
+BOOL now_play = false;
 
 // 소켓 함수 오류 출력 후 종료
 void err_quit(const char* msg)
@@ -125,6 +125,8 @@ DWORD WINAPI RecvSendThread(LPVOID arg)
 		g_ScnMgr->m_Objects[HERO_ID2]->SetHP(240);
 		g_ScnMgr->m_Objects[HERO_ID2]->SetState(STATE_GROUND);
 		player_num = HERO_ID2;
+
+		now_play = true;
 	}
 
 	while (1) {
@@ -132,21 +134,21 @@ DWORD WINAPI RecvSendThread(LPVOID arg)
 		retval = recvn(client_sock, (char *)& len, sizeof(int), 0);
 		retval = recvn(client_sock, buf, len, 0);
 
-		if (player_num == 0) {
-			for (int i = 0; i < len; ++i)
-				player1Event.push_back(buf[i]);
-		}
-		else if (player_num == 1) {
-			for (int i = 0; i < len; ++i)
-				player2Event.push_back(buf[i]);
+		if (now_play) {
+			if (player_num == 0) {
+				for (int i = 0; i < len; ++i)
+					player1Event.push_back(buf[i]);
+			}
+			else if (player_num == 1) {
+				for (int i = 0; i < len; ++i)
+					player2Event.push_back(buf[i]);
+			}
 		}
 
 		SetEvent(wait_Recv[player_num]);
 
-		std::cout << player_num << "recv_end" << std::endl;
-
 		/////////////////////////////SEND
-		WaitForSingleObject(wait_Send[player_num], INFINITE);
+		WaitForSingleObject(wait_Logic[player_num], INFINITE);
 
 		int read_data = 0;
 		SendData sData;
@@ -160,10 +162,6 @@ DWORD WINAPI RecvSendThread(LPVOID arg)
 
 				memcpy(buf + read_data, (void*)&sData, sizeof(SendData));
 				read_data += sizeof(SendData);
-				//테스트용 코드
-				//SendData temp;
-				//memcpy((void*)& temp, buf + read_data - sizeof(SendData), sizeof(SendData));
-				//printf("%f %f, %d, %d, %d \n", temp.posX, temp.posY, temp.idx_num, temp.type, temp.hp);
 			}
 		}
 
@@ -171,7 +169,6 @@ DWORD WINAPI RecvSendThread(LPVOID arg)
 		retval = send(client_sock, buf, read_data, 0);
 
 		ZeroMemory(buf, read_data);
-		std::cout << player_num << "Send_end" << std::endl;
 	}
 	return 0;
 }
@@ -184,7 +181,7 @@ DWORD WINAPI GameLogicThread(LPVOID arg)
 	//보스갱신및 충돌체크
 	while (1) {
 		//Recv가 끝나면 시작
-		WaitForMultipleObjects(2, wait_Recv, TRUE, INFINITE);
+		WaitForMultipleObjects(2, wait_Recv, TRUE, 16);
 		//WaitForSingleObject(wait_Recv[0], INFINITE);
 
 		// Calc Elapsed Time
@@ -210,7 +207,7 @@ DWORD WINAPI GameLogicThread(LPVOID arg)
 		int bulletID = SHOOT_NONE;
 
 		//WASD왼쪽오른쪽위아래
-		if (player1Event.size() != 0) {
+		if (player1Event.size() == 8) {
 			forceY1 += amount * player1Event.front();
 			player1Event.pop_front();
 			forceX1 -= amount * player1Event.front();
@@ -231,8 +228,9 @@ DWORD WINAPI GameLogicThread(LPVOID arg)
 				g_ScnMgr->Shoot(HERO_ID, bulletID);
 			}
 		}
+		else if(player1Event.size())
 
-		if (player2Event.size() != 0) {
+		if (player2Event.size() == 8) {
 			forceY2 += amount * player2Event.front();
 			player2Event.pop_front();
 			forceX2 -= amount * player2Event.front();
@@ -242,6 +240,7 @@ DWORD WINAPI GameLogicThread(LPVOID arg)
 			forceX2 += amount * player2Event.front();
 			player2Event.pop_front();
 			g_ScnMgr->ApplyForce(forceX2, forceY2, forceZ, HERO_ID2, eTime);
+			printf("2P : %f, %f \n", forceX2, forceY2);
 
 			//총알키값
 			for (int i = 0; i < 4; i++) {
@@ -259,8 +258,8 @@ DWORD WINAPI GameLogicThread(LPVOID arg)
 		g_ScnMgr->Update(eTime);
 
 		//종료시 Send 시작
-		SetEvent(wait_Send[0]);
-		SetEvent(wait_Send[1]);
+		SetEvent(wait_Logic[0]);
+		SetEvent(wait_Logic[1]);
 	}
 
 	return 0;
@@ -304,8 +303,8 @@ int main(int argc, char* argv[])
 	wait_Recv[0] = CreateEvent(NULL, FALSE, FALSE, NULL);
 	wait_Recv[1] = CreateEvent(NULL, FALSE, FALSE, NULL);
 
-	wait_Send[0] = CreateEvent(NULL, FALSE, FALSE, NULL);
-	wait_Send[1] = CreateEvent(NULL, FALSE, FALSE, NULL);
+	wait_Logic[0] = CreateEvent(NULL, FALSE, FALSE, NULL);
+	wait_Logic[1] = CreateEvent(NULL, FALSE, FALSE, NULL);
 
 	while (1) {
 		// accept()
