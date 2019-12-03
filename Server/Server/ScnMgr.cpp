@@ -173,19 +173,6 @@ void ScnMgr::GarbageCollector()
 			}
 		}
 	}
-	for (int i = 0; i < 3; ++i) {
-		if (m_HP[i] != NULL) {
-			int kind, hp;
-			m_HP[i]->GetKind(&kind);
-			m_HP[i]->GetHP(&hp);
-			if (kind == KIND_HP) {
-				if (hp <= 0) {
-					DeleteUI(i);
-					continue;
-				}
-			}
-		}
-	}
 }
 
 
