@@ -21,7 +21,6 @@ private:
 	GLuint m_BulletTexture = 0;
 	GLuint m_MonsterTexture = 0;
 	GLuint m_BossTexture = 0;
-	GLuint m_PoopTexture = 0;
 	GLuint m_HPTexture = 0;
 	GLuint m_WinTexture = 0;
  	GLuint m_DeathTexture = 0;
@@ -46,22 +45,10 @@ public:
 	~ScnMgr();
 	
 	void RenderScene();
-	void Update(float eTime);
-	void GarbageCollector();
-	void ApplyForce(float x, float y, float z, float eTime);
-
+	
 	void AddObject(float x, float y, float z, float sx, float sy, float sz, float vx, float vy, float vz, int kind, int hp, int idx_num);
 	void DeleteObject(int id);
 	void DeleteUI(int id);
-	void AddPlayer(float x, float y, float z, float vx, float vy, float vz);
-
-	int FindEmptyObjectSlot();
-
-	void Shoot(int shootID);
-
-	void DoCollisionTest();
-	bool RRCollision(float minX, float minY, float minZ, float maxX, float maxY, float maxZ, float minX1, float minY1, float minZ1, float maxX1, float maxY1, float maxZ1);
-	void ProcessCollison(int i, int j);	
 
 	void ChangeMap(int kind);
 };

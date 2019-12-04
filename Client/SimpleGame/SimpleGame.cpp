@@ -99,7 +99,7 @@ DWORD WINAPI RecvThread(LPVOID arg)
 	float temp = 0.f;
 	char buf[BUFSIZE];	
 
-	recvData PlayerInfo;
+	recvData rData;
 
 	while (now_play == TRUE){
 		int curread = 0;
@@ -107,24 +107,25 @@ DWORD WINAPI RecvThread(LPVOID arg)
 		recvn(sock, (char *)&len, sizeof(int), 0);
 		recvn(sock, buf, len, 0);
 
-		if (len <= 20) {
+		if (len <= 40) {
 			int kind;
 
+			// Garbage Collector
 			for (int i = HERO_ID + 2; i < MAX_OBJECTS; ++i) {
 				g_ScnMgr->DeleteObject(i);
 			}
 		}
 
 		while (len > 0) {
-			memcpy((void*)&PlayerInfo, buf + curread, sizeof(recvData));
+			memcpy((void*)&rData, buf + curread, sizeof(recvData));
 
-			int idx_num = PlayerInfo.idx_num;
+			int idx_num = rData.idx_num;
 
-			if (PlayerInfo.type == KIND_HERO) {
-				if (g_ScnMgr->m_Objects[PlayerInfo.idx_num] == NULL) {
+			if (rData.type == KIND_HERO) {
+				if (g_ScnMgr->m_Objects[rData.idx_num] == NULL) {
+					// Create Player Character
 					g_ScnMgr->m_Objects[idx_num] = new Object();
-
-					g_ScnMgr->m_Objects[idx_num]->SetPos(PlayerInfo.posX, PlayerInfo.posY, 0.0f);
+					g_ScnMgr->m_Objects[idx_num]->SetPos(rData.posX, rData.posY, 0.0f);
 					g_ScnMgr->m_Objects[idx_num]->SetVel(0.0f, 0.0f, 0.0f);
 					g_ScnMgr->m_Objects[idx_num]->SetAcc(0.0f, 0.0f, 0.0f);
 					g_ScnMgr->m_Objects[idx_num]->SetSize(0.6f, 0.6f, 0.6f);
@@ -135,22 +136,19 @@ DWORD WINAPI RecvThread(LPVOID arg)
 					g_ScnMgr->m_Objects[idx_num]->SetHP(240);
 					g_ScnMgr->m_Objects[idx_num]->SetState(STATE_GROUND);
 				}
-
-				g_ScnMgr->m_Objects[idx_num]->SetPos(PlayerInfo.posX, PlayerInfo.posY, temp);
-				//printf("ID: %d, %f, %f, %d, %d \n", PlayerInfo.idx_num, PlayerInfo.posX, PlayerInfo.posY, PlayerInfo.type, PlayerInfo.hp);
+				g_ScnMgr->m_Objects[idx_num]->SetPos(rData.posX, rData.posY, temp);
 			}
-			else if (PlayerInfo.type == KIND_BULLET) {
-				if (g_ScnMgr->m_Objects[PlayerInfo.idx_num] == NULL) {
+			else if (rData.type == KIND_BULLET) {
+				// Create Bullet
+				if (g_ScnMgr->m_Objects[rData.idx_num] == NULL) {
 					g_ScnMgr->AddObject(0, 0, 0, 0.75f, 0.75f, 0.75f, 0, 0, 0, KIND_BULLET, 20, idx_num);
 				}
-				g_ScnMgr->m_Objects[PlayerInfo.idx_num]->SetPos(PlayerInfo.posX, PlayerInfo.posY, temp);
-				//printf("ID: %d, %f, %f, %d, %d \n", PlayerInfo.idx_num, PlayerInfo.posX, PlayerInfo.posY, PlayerInfo.type, PlayerInfo.hp);
+				g_ScnMgr->m_Objects[rData.idx_num]->SetPos(rData.posX, rData.posY, temp);
 			}
 
 			curread += sizeof(recvData);
 			len -= sizeof(recvData);
 		}
-
 	}
 
 	return 0;
@@ -215,7 +213,6 @@ DWORD WINAPI SendThread(LPVOID arg)
 		retval = send(sock, buf, len, 0);
 
 		Sleep(16);
-
 	}
 
 	return 0;
@@ -223,50 +220,8 @@ DWORD WINAPI SendThread(LPVOID arg)
 
 void RenderScene(int temp) {
 
-	// Calc Elapsed Time
-	if (g_PrevTime == 0) {
-		g_PrevTime = GetTickCount();
-		return;
-	}
-	DWORD CurTime = GetTickCount();
-	DWORD ElapsedTime = CurTime - g_PrevTime;
-	g_PrevTime = CurTime;
-	float eTime = (float)ElapsedTime / 1000.0f;
-
-	// Calc Shoot Delay
-	DWORD ShootCurTime = GetTickCount();
-	DWORD ShootElapsedTime = ShootCurTime - g_ShootStartTime;
-
-	// Apply Force
-	float forceX = 0.0f;
-	float forceY = 0.0f;
-	float forceZ = 0.0f;
-	float amount = 1.0f;
-	float zAmount = 20.0f;
-
-	if (g_KeyW) {
-		forceY += amount;
-	}
-	if (g_KeyS) {
-		forceY -= amount;
-	}
-	if (g_KeyA) {
-		forceX -= amount;
-	}
-	if (g_KeyD) {
-		forceX += amount;
-	}
-	if (g_KeySP) {
-		forceZ += zAmount;
-	}
-
 	g_ScnMgr->RenderScene();   // Render   
-	if (ShootElapsedTime % 50 == 0) { // Shoot
-		//g_ScnMgr->Shoot(g_Shoot);
-	}
-	//g_ScnMgr->GarbageCollector();   // 화면 밖으로 나가는 오브젝트 삭제
-	g_ScnMgr->DoCollisionTest();
-
+	
 	glutSwapBuffers();
 
 	glutTimerFunc(16, RenderScene, 0);
@@ -294,9 +249,6 @@ void KeyDownInput(unsigned char key, int x, int y) {
 	if (key == 'd') {
 		g_KeyD = TRUE;
 	}
-	if (key == ' ') {
-		g_KeySP = TRUE;
-	}
 }
 
 void KeyUpInput(unsigned char key, int x, int y) {
@@ -311,9 +263,6 @@ void KeyUpInput(unsigned char key, int x, int y) {
 	}
 	if (key == 'd') {
 		g_KeyD = FALSE;
-	}
-	if (key == ' ') {
-		g_KeySP = FALSE;
 	}
 }
 
