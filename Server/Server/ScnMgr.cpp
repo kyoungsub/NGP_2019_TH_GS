@@ -14,9 +14,6 @@ int Spawncnt = 0;
 float m_SpawnNextTime = 0.1f;
 float m_SpawnNextCurTime = 0.1f;
 
-// Poop seq
-int Poop_seq = 0;
-
 BOOL PLAY = TRUE;
 
 ScnMgr::ScnMgr()
@@ -155,13 +152,6 @@ void ScnMgr::GarbageCollector()
 
 					DeleteObject(i);
 					//m_Sound->PlaySound(m_SoundTearsImpacts, false, 0.5f);
-					continue;
-				}
-			}
-			if (kind == KIND_POOP) {
-				if (Poop_seq > 4) {
-					DeleteObject(i);
-					//m_Sound->PlaySound(m_SoundPlop, false, 1.1f);
 					continue;
 				}
 			}
@@ -378,8 +368,6 @@ void ScnMgr::DoCollisionTest()
 						// Creat Boss Object
 						AddObject(1.5f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, KIND_BOSS, 200, STATE_GROUND);
 
-						// Change Map
-						ChangeMap(BOSSROOM);
 					}
 					continue;
 				}
@@ -507,29 +495,5 @@ void ScnMgr::ProcessCollison(int i, int j)
 			dynamic_cast<UI*>(m_HP[index])->SetSeqX(SeqX);
 		}
 		//m_Sound->PlaySound(m_SoundHurt, false, 0.1f);
-	}
-	if (kind1 == KIND_POOP && kind2 == KIND_BULLET) {
-		int hp;
-
-		Poop_seq++;
-		hp = 0;
-		obj2->SetHP(hp);
-	}
-	if (kind1 == KIND_BULLET && kind2 == KIND_POOP) {
-		int hp;
-
-		Poop_seq++;
-		hp = 0;
-		obj1->SetHP(hp);
-	}
-}
-
-void ScnMgr::ChangeMap(int kind)
-{
-	if (kind == DEFAULTROOM) {
-		//m_BGTexture = m_Renderer->CreatePngTexture("./textures/Basement01.png");
-	}
-	else if (kind == BOSSROOM) {
-		//m_BGTexture = m_Renderer->CreatePngTexture("./textures/BossRoom.png");
 	}
 }

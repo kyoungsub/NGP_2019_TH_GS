@@ -35,7 +35,6 @@ BOOL g_KeyD = FALSE;
 BOOL g_KeySP = FALSE;
 
 int g_Shoot = SHOOT_NONE;
-DWORD g_ShootStartTime = 0;
 
 bool now_play = FALSE;
 HANDLE wait_start;
@@ -272,7 +271,6 @@ void SetKeyRepeat() {
 
 
 void SpecialKeyDownInput(int key, int x, int y) {
-	g_ShootStartTime = GetTickCount();
 
 	switch (key)
 	{

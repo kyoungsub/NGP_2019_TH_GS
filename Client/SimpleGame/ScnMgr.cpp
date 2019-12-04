@@ -4,19 +4,6 @@
 int g_Seq = 0;
 float g_time = 0;
 
-// Hit Delay
-DWORD g_HitStartTime = 0;
-DWORD HitCurTime = 0;
-DWORD HitElapsedTime = 0;
-
-// Boss - Spawn monster time
-int Spawncnt = 0;
-float m_SpawnNextTime = 0.1f;
-float m_SpawnNextCurTime = 0.1f;
-
-// Poop seq
-int Poop_seq = 0;
-
 BOOL PLAY = TRUE;
 
 ScnMgr::ScnMgr()
