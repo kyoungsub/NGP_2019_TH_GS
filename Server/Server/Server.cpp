@@ -283,7 +283,7 @@ int main(int argc, char* argv[])
 		}
 	}
 	while (1) {
-		WaitForMultipleObjects(2, wait_Recv, TRUE, 16);
+		WaitForMultipleObjects(2, wait_Recv, TRUE, INFINITE);
 
 		// Calc Elapsed Time
 		if (g_PrevTime == 0) {

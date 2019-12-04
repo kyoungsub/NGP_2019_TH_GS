@@ -101,7 +101,7 @@ DWORD WINAPI RecvThread(LPVOID arg)
 
 	recvData PlayerInfo;
 
-	while (now_play == TRUE) {
+	while (now_play == TRUE){
 		int curread = 0;
 
 		recvn(sock, (char *)&len, sizeof(int), 0);
@@ -163,10 +163,6 @@ DWORD WINAPI SendThread(LPVOID arg)
 	int addrlen;
 	int len;
 	char buf[8];
-
-	while (now_play == FALSE) {
-		recvn(sock, (char*)&now_play, sizeof(bool), 0);
-	}
 
 	while (now_play == TRUE) {
 		if (g_KeyW) {
@@ -419,6 +415,10 @@ int main(int argc, char **argv) {
 	HANDLE hThread[2];
 
 	wait_start = CreateEvent(NULL, TRUE, FALSE, NULL);
+
+	while (now_play == FALSE) {
+		recvn(g_sock, (char*)&now_play, sizeof(bool), 0);
+	}
 
 	hThread[0] = CreateThread(NULL, 0, RecvThread, (LPVOID)g_sock, 0, NULL);
 	hThread[1] = CreateThread(NULL, 0, SendThread, (LPVOID)g_sock, 0, NULL);
