@@ -106,16 +106,18 @@ DWORD WINAPI RecvThread(LPVOID arg)
 		recvn(sock, (char *)&len, sizeof(int), 0);
 		recvn(sock, buf, len, 0);
 
-		if (len <= 40) {
-			int kind;
-
+		
+		if (len <= 60) {			
 			// Garbage Collector
-			for (int i = HERO_ID + 2; i < MAX_OBJECTS; ++i) {
-				g_ScnMgr->DeleteObject(i);
+			for (int i = 3; i < MAX_OBJECTS; ++i) {
+				if (g_ScnMgr->m_Objects[i] != NULL) {
+					g_ScnMgr->DeleteObject(i);
+				}
 			}
 		}
-
+		
 		while (len > 0) {
+			
 			memcpy((void*)&rData, buf + curread, sizeof(recvData));
 
 			int idx_num = rData.idx_num;
@@ -140,7 +142,34 @@ DWORD WINAPI RecvThread(LPVOID arg)
 			else if (rData.type == KIND_BULLET) {
 				// Create Bullet
 				if (g_ScnMgr->m_Objects[rData.idx_num] == NULL) {
-					g_ScnMgr->AddObject(0, 0, 0, 0.75f, 0.75f, 0.75f, 0, 0, 0, KIND_BULLET, 20, idx_num);
+					g_ScnMgr->AddObject(0.f, 0.f, 0.f, 0.75f, 0.75f, 0.75f, 0, 0, 0, KIND_BULLET, 20, idx_num);
+				}
+				g_ScnMgr->m_Objects[rData.idx_num]->SetPos(rData.posX, rData.posY, temp);
+			}
+			else if (rData.type == KIND_BOSS_DOOR) {
+				// Create Door
+				if (g_ScnMgr->m_Objects[rData.idx_num] == NULL) {
+					g_ScnMgr->AddObject(rData.posX, rData.posY, 0.f, 1.25f, 1.25f, 1.25f, 0, 0, 0, KIND_BOSS_DOOR, 20, idx_num);
+				}
+			}
+			else if (rData.type == KIND_BOSS) {
+				// Create BOSS
+				if (g_ScnMgr->m_Objects[rData.idx_num] == NULL) {
+					g_ScnMgr->AddObject(rData.posX, rData.posY, 0.f, 1.f, 1.f, 1.f, 0, 0, 0, KIND_BOSS, 200, idx_num);
+				}
+				int kind;
+
+				g_ScnMgr->m_Objects[rData.idx_num]->GetKind(&kind);
+
+				if (kind == KIND_BOSS_DOOR) {
+					g_ScnMgr->AddObject(rData.posX, rData.posY, 0.f, 1.f, 1.f, 1.f, 0, 0, 0, KIND_BOSS, 200, idx_num);
+				}
+				g_ScnMgr->m_Objects[rData.idx_num]->SetPos(rData.posX, rData.posY, temp);
+			}
+			else if (rData.type == KIND_MONSTER) {
+				// Create MONSTER
+				if (g_ScnMgr->m_Objects[rData.idx_num] == NULL) {
+					g_ScnMgr->AddObject(rData.posX, rData.posY, 0.f, 0.6f, 0.6f, 0.6f, 0, 0, 0, KIND_MONSTER, 60, idx_num);
 				}
 				g_ScnMgr->m_Objects[rData.idx_num]->SetPos(rData.posX, rData.posY, temp);
 			}

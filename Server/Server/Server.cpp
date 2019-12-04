@@ -134,10 +134,25 @@ DWORD WINAPI RecvThread(LPVOID arg)
 	while (now_play == FALSE) {
 		send(client_sock, (char*)&now_play, sizeof(bool), 0);
 	}
+
 	if(player_num == 0)
 		send(client_sock, (char*)&now_play, sizeof(bool), 0);
 	else if(player_num == 1)
 		send(client_sock, (char*)&now_play, sizeof(bool), 0);
+
+	// Create Door
+	g_ScnMgr->m_Objects[2] = new Object();
+	g_ScnMgr->m_Objects[2]->SetPos(0.0f, 1.25f, 0.0f);
+	g_ScnMgr->m_Objects[2]->SetVel(0.f, 0.f, 0.f);
+	g_ScnMgr->m_Objects[2]->SetAcc(0.0f, 0.0f, 0.0f);
+	g_ScnMgr->m_Objects[2]->SetSize(1.0f, 1.0f, 1.0f);
+	g_ScnMgr->m_Objects[2]->SetMass(0.15f);
+	g_ScnMgr->m_Objects[2]->SetCoefFrict(0.5f);
+	g_ScnMgr->m_Objects[2]->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+	g_ScnMgr->m_Objects[2]->SetKind(KIND_BOSS_DOOR);
+	g_ScnMgr->m_Objects[2]->SetHP(240);
+	g_ScnMgr->m_Objects[2]->SetState(STATE_GROUND);
+	
 
 	//Recv Data
 	while (now_play == TRUE) {

@@ -47,12 +47,13 @@ void ScnMgr::Update(float eTime)
 				if (kind == KIND_MONSTER) {
 					float x, y, z;
 					m_Objects[HERO_ID]->GetPos(&x, &y, &z);
+					x += 0.1f, y += 0.1f;
 					dynamic_cast<Monster*>(m_Objects[i])->Update(x, y, z, eTime);
 				}
 				else if (kind == KIND_BOSS) {
-					dynamic_cast<Boss*>(m_Objects[i])->Update(eTime);
-					m_SpawnNextCurTime -= eTime;
-
+					dynamic_cast<Boss*>(m_Objects[2])->Update(eTime);
+					//m_SpawnNextCurTime -= eTime;
+					/*
 					if (m_SpawnNextCurTime <= 0.f)
 					{
 						float x, y, z;
@@ -67,6 +68,7 @@ void ScnMgr::Update(float eTime)
 						m_SpawnNextTime = 0.1f;
 						m_SpawnNextCurTime = 0.1f;
 					}
+					*/
 				}
 				else if (kind == KIND_EFFECT) {
 					dynamic_cast<Effect*>(m_Objects[i])->Update(eTime);
@@ -359,19 +361,29 @@ void ScnMgr::DoCollisionTest()
 					if (RRCollision(minX, minY, minZ, maxX, maxY, maxZ, minX1, minY1, minZ1, maxX1, maxY1, maxZ1)) {
 						// Delete Door Object
 						if (kind == KIND_BOSS_DOOR) {
-							DeleteObject(i);
+							DeleteObject(2);
 						}
 						else if (kind1 == KIND_BOSS_DOOR) {
-							DeleteObject(j);
+							DeleteObject(2);
 						}
 
 						// Creat Boss Object
-						AddObject(1.5f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, KIND_BOSS, 200, STATE_GROUND);
-
+						m_Objects[2] = new Boss();
+						m_Objects[2]->SetPos(1.5f, 0.0f, 0.0f);
+						m_Objects[2]->SetVel(0.f, 0.f, 0.f);
+						m_Objects[2]->SetAcc(0.0f, 0.0f, 0.0f);
+						m_Objects[2]->SetSize(1.0f, 1.0f, 1.0f);
+						m_Objects[2]->SetMass(0.15f);
+						m_Objects[2]->SetCoefFrict(0.5f);
+						m_Objects[2]->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+						m_Objects[2]->SetKind(KIND_BOSS);
+						m_Objects[2]->SetHP(200);
+						m_Objects[2]->SetState(STATE_GROUND);
 					}
 					continue;
 				}
 				else {
+					/*
 					if (RRCollision(minX, minY, minZ, maxX, maxY, maxZ, minX1, minY1, minZ1, maxX1, maxY1, maxZ1)) {
 						collisonCount++;
 
@@ -383,13 +395,8 @@ void ScnMgr::DoCollisionTest()
 							ProcessCollison(i, j);
 						}
 					}
+					*/
 				}
-			}
-			if (collisonCount > 0) {
-				m_Objects[i]->SetColor(1.0f, 0.0f, 0.0f, 0.75f);
-			}
-			else {
-				m_Objects[i]->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 			}
 		}
 	}
