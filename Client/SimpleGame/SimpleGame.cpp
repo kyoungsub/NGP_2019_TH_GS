@@ -37,6 +37,9 @@ BOOL g_KeySP = FALSE;
 int g_Shoot = SHOOT_NONE;
 DWORD g_ShootStartTime = 0;
 
+bool now_play = FALSE;
+HANDLE wait_start;
+
 SOCKET g_sock;
 
 // 소켓 함수 오류 출력 후 종료
@@ -98,7 +101,7 @@ DWORD WINAPI RecvThread(LPVOID arg)
 
 	recvData PlayerInfo;
 
-	while (1) {
+	while (now_play == TRUE) {
 		int curread = 0;
 
 		recvn(sock, (char *)&len, sizeof(int), 0);
@@ -106,10 +109,10 @@ DWORD WINAPI RecvThread(LPVOID arg)
 
 		if (len <= 20) {
 			int kind;
-			
+
 			for (int i = HERO_ID + 2; i < MAX_OBJECTS; ++i) {
 				g_ScnMgr->DeleteObject(i);
-			}			
+			}
 		}
 
 		while (len > 0) {
@@ -120,7 +123,7 @@ DWORD WINAPI RecvThread(LPVOID arg)
 			if (PlayerInfo.type == KIND_HERO) {
 				if (g_ScnMgr->m_Objects[PlayerInfo.idx_num] == NULL) {
 					g_ScnMgr->m_Objects[idx_num] = new Object();
-										
+
 					g_ScnMgr->m_Objects[idx_num]->SetPos(PlayerInfo.posX, PlayerInfo.posY, 0.0f);
 					g_ScnMgr->m_Objects[idx_num]->SetVel(0.0f, 0.0f, 0.0f);
 					g_ScnMgr->m_Objects[idx_num]->SetAcc(0.0f, 0.0f, 0.0f);
@@ -147,6 +150,7 @@ DWORD WINAPI RecvThread(LPVOID arg)
 			curread += sizeof(recvData);
 			len -= sizeof(recvData);
 		}
+
 	}
 
 	return 0;
@@ -160,7 +164,11 @@ DWORD WINAPI SendThread(LPVOID arg)
 	int len;
 	char buf[8];
 
-	while (1) {
+	while (now_play == FALSE) {
+		recvn(sock, (char*)&now_play, sizeof(bool), 0);
+	}
+
+	while (now_play == TRUE) {
 		if (g_KeyW) {
 			buf[0] = TRUE;
 		}
@@ -409,6 +417,8 @@ int main(int argc, char **argv) {
 	g_ScnMgr = new ScnMgr();
 
 	HANDLE hThread[2];
+
+	wait_start = CreateEvent(NULL, TRUE, FALSE, NULL);
 
 	hThread[0] = CreateThread(NULL, 0, RecvThread, (LPVOID)g_sock, 0, NULL);
 	hThread[1] = CreateThread(NULL, 0, SendThread, (LPVOID)g_sock, 0, NULL);

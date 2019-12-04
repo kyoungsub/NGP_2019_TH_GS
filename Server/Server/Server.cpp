@@ -14,18 +14,20 @@
 #include "Object.h"
 
 #define SERVERPORT 9000
-#define BUFSIZE 1024
 
 ScnMgr* g_ScnMgr = NULL;
 
 std::list<int> player1Event;
 std::list<int> player2Event;
+int player1EventSize = 0;
+int player2EventSize = 0;
 
-HANDLE recvsendHandle[2];
-HANDLE gameLogicHandle;
+HANDLE recvHandle[2];
+HANDLE sendHandle[2];
 
 HANDLE wait_Recv[2];
 HANDLE wait_Logic[2];
+CRITICAL_SECTION cs;
 
 DWORD g_PrevTime = 0;
 DWORD g_ShootStartTime = 0;
@@ -33,9 +35,11 @@ DWORD ShootElapsedTime = 0;
 float eTime;
 
 int player1ID;
+int playerS1ID;
 int player2ID;
+int playerS2ID;
 
-BOOL now_play = false;
+bool now_play = FALSE;
 
 // 소켓 함수 오류 출력 후 종료
 void err_quit(const char* msg)
@@ -85,7 +89,7 @@ int recvn(SOCKET s, char* buf, int len, int flags)
 }
 
 //송신 스레드
-DWORD WINAPI RecvSendThread(LPVOID arg)
+DWORD WINAPI RecvThread(LPVOID arg)
 {
 	int retval;
 	SOCKET client_sock = (SOCKET)arg;
@@ -125,35 +129,71 @@ DWORD WINAPI RecvSendThread(LPVOID arg)
 		g_ScnMgr->m_Objects[HERO_ID2]->SetHP(240);
 		g_ScnMgr->m_Objects[HERO_ID2]->SetState(STATE_GROUND);
 		player_num = HERO_ID2;
-
-		now_play = true;
 	}
 
-	while (1) {
-		//data 받기
+	while (now_play == FALSE) {
+		send(client_sock, (char*)&now_play, sizeof(bool), 0);
+	}
+	if(player_num == 0)
+		send(client_sock, (char*)&now_play, sizeof(bool), 0);
+	else if(player_num == 1)
+		send(client_sock, (char*)&now_play, sizeof(bool), 0);
+
+	//Recv Data
+	while (now_play == TRUE) {
 		retval = recvn(client_sock, (char *)& len, sizeof(int), 0);
 		retval = recvn(client_sock, buf, len, 0);
 
-		if (now_play) {
-			if (player_num == 0) {
-				for (int i = 0; i < len; ++i)
+		if (player_num == HERO_ID) {
+			if (player1EventSize == 0) {
+				for (int i = 0; i < len; ++i) {
 					player1Event.push_back(buf[i]);
+					player1EventSize += 1;
+				}
 			}
-			else if (player_num == 1) {
-				for (int i = 0; i < len; ++i)
+		}
+		else if (player_num == HERO_ID2) {
+			if (player2EventSize == 0) {
+				for (int i = 0; i < len; ++i) {
 					player2Event.push_back(buf[i]);
+					player2EventSize += 1;
+				}
 			}
 		}
 
-		SetEvent(wait_Recv[player_num]);
+		if (player_num == HERO_ID)
+			SetEvent(wait_Recv[0]);
+		else if (player_num == HERO_ID2)
+			SetEvent(wait_Recv[1]);
+	}
+	return 0;
+}
 
-		/////////////////////////////SEND
+DWORD WINAPI SendThread(LPVOID arg)
+{
+	int retval;
+	SOCKET client_sock = (SOCKET)arg;
+	SOCKADDR_IN clientaddr;
+	int addrlen;
+	int player_num;
+	char buf[BUFSIZE];
+
+	addrlen = sizeof(client_sock);
+	getpeername(client_sock, (SOCKADDR*)& clientaddr, &addrlen);
+
+	if (GetCurrentThreadId() == playerS1ID)
+		player_num = HERO_ID;
+	else if(GetCurrentThreadId() == playerS2ID)
+		player_num = HERO_ID2;
+
+	while (1) {
+		//갱신 끝나고 송신
 		WaitForSingleObject(wait_Logic[player_num], INFINITE);
 
 		int read_data = 0;
 		SendData sData;
 		float temp;
-		for(int i=0; i< MAX_OBJECTS; ++i) {
+		for (int i = 0; i < MAX_OBJECTS; ++i) {
 			if (g_ScnMgr->m_Objects[i] != NULL) {
 				g_ScnMgr->m_Objects[i]->GetPos(&sData.posX, &sData.posY, &temp);
 				g_ScnMgr->m_Objects[i]->GetKind(&sData.type);
@@ -168,98 +208,7 @@ DWORD WINAPI RecvSendThread(LPVOID arg)
 		retval = send(client_sock, (char*)& read_data, sizeof(int), 0);
 		retval = send(client_sock, buf, read_data, 0);
 
-		ZeroMemory(buf, read_data);
-	}
-	return 0;
-}
-
-DWORD WINAPI GameLogicThread(LPVOID arg)
-{
-	g_PrevTime = GetTickCount();
-	g_ScnMgr = new ScnMgr();
-
-	//보스갱신및 충돌체크
-	while (1) {
-		//Recv가 끝나면 시작
-		WaitForMultipleObjects(2, wait_Recv, TRUE, 16);
-		//WaitForSingleObject(wait_Recv[0], INFINITE);
-
-		// Calc Elapsed Time
-		if (g_PrevTime == 0) {
-			g_PrevTime = GetTickCount();
-			return 0;
-		}
-		DWORD CurTime = GetTickCount();
-		DWORD ElapsedTime = CurTime - g_PrevTime;
-		g_PrevTime = CurTime;
-
-		eTime = (float)ElapsedTime / 1000.0f;
-
-		// Calc Shoot Delay
-		DWORD ShootCurTime = GetTickCount();
-		ShootElapsedTime = ShootCurTime - g_ShootStartTime;
-
-		//Apply Force
-		float forceX1 = 0.0f, forceX2 = 0.0f;
-		float forceY1 = 0.0f, forceY2 = 0.0f;
-		float forceZ = 0.0f;
-		float amount = 1.0f;
-		int bulletID = SHOOT_NONE;
-
-		//WASD왼쪽오른쪽위아래
-		if (player1Event.size() == 8) {
-			forceY1 += amount * player1Event.front();
-			player1Event.pop_front();
-			forceX1 -= amount * player1Event.front();
-			player1Event.pop_front();
-			forceY1 -= amount * player1Event.front();
-			player1Event.pop_front();
-			forceX1 += amount * player1Event.front();
-			player1Event.pop_front();
-			g_ScnMgr->ApplyForce(forceX1, forceY1, forceZ, HERO_ID, eTime);
-
-			//총알키값
-			for (int i = 0; i < 4; i++) {
-				if (player1Event.front() == TRUE)
-					bulletID = i + 1;
-				player1Event.pop_front();
-			}
-			if (ShootElapsedTime % 50 == 0) { // Shoot
-				g_ScnMgr->Shoot(HERO_ID, bulletID);
-			}
-		}
-		else if(player1Event.size())
-
-		if (player2Event.size() == 8) {
-			forceY2 += amount * player2Event.front();
-			player2Event.pop_front();
-			forceX2 -= amount * player2Event.front();
-			player2Event.pop_front();
-			forceY2 -= amount * player2Event.front();
-			player2Event.pop_front();
-			forceX2 += amount * player2Event.front();
-			player2Event.pop_front();
-			g_ScnMgr->ApplyForce(forceX2, forceY2, forceZ, HERO_ID2, eTime);
-			printf("2P : %f, %f \n", forceX2, forceY2);
-
-			//총알키값
-			for (int i = 0; i < 4; i++) {
-				if (player2Event.front() == TRUE)
-					bulletID = i + 1;
-				player2Event.pop_front();
-			}
-			if (ShootElapsedTime % 50 == 0) { // Shoot
-				g_ScnMgr->Shoot(HERO_ID2, bulletID);
-			}
-		}
-
-		g_ScnMgr->GarbageCollector();   // 화면 밖으로 나가는 오브젝트 삭제
-		g_ScnMgr->DoCollisionTest();
-		g_ScnMgr->Update(eTime);
-
-		//종료시 Send 시작
-		SetEvent(wait_Logic[0]);
-		SetEvent(wait_Logic[1]);
+		ZeroMemory(buf, BUFSIZE);	
 	}
 
 	return 0;
@@ -298,7 +247,9 @@ int main(int argc, char* argv[])
 	SOCKADDR_IN clientaddr;
 	int addrlen;
 
-	gameLogicHandle = CreateThread(NULL, 0, GameLogicThread, NULL, 0, NULL);
+	//게임로직
+	g_PrevTime = GetTickCount();
+	g_ScnMgr = new ScnMgr();
 
 	wait_Recv[0] = CreateEvent(NULL, FALSE, FALSE, NULL);
 	wait_Recv[1] = CreateEvent(NULL, FALSE, FALSE, NULL);
@@ -306,7 +257,7 @@ int main(int argc, char* argv[])
 	wait_Logic[0] = CreateEvent(NULL, FALSE, FALSE, NULL);
 	wait_Logic[1] = CreateEvent(NULL, FALSE, FALSE, NULL);
 
-	while (1) {
+	while (now_play == FALSE) {
 		// accept()
 		addrlen = sizeof(clientaddr);
 		client_sock = accept(listen_sock, (SOCKADDR*)& clientaddr, &addrlen);
@@ -317,14 +268,107 @@ int main(int argc, char* argv[])
 		// 접속한 클라이언트 정보 출력
 		printf("\n[TCP 서버] 클라이언트 접속: IP 주소=%s, 포트 번호=%d\n", inet_ntoa(clientaddr.sin_addr), ntohs(clientaddr.sin_port));
 
-		if (recvsendHandle[0] == NULL) {
-			recvsendHandle[0] = CreateThread(NULL, 0, RecvSendThread, (LPVOID)client_sock, 0, NULL);
-			player1ID = GetThreadId(recvsendHandle[0]);
+		if (recvHandle[0] == NULL) {
+			recvHandle[0] = CreateThread(NULL, 0, RecvThread, (LPVOID)client_sock, 0, NULL);
+			sendHandle[0] = CreateThread(NULL, 0, SendThread, (LPVOID)client_sock, 0, NULL);
+			player1ID = GetThreadId(recvHandle[0]);
+			playerS1ID = GetThreadId(sendHandle[0]);
 		}
-		else if (recvsendHandle[1] == NULL) {
-			recvsendHandle[1] = CreateThread(NULL, 0, RecvSendThread, (LPVOID)client_sock, 0, NULL);
-			player2ID = GetThreadId(recvsendHandle[1]);
+		else if (recvHandle[1] == NULL) {
+			recvHandle[1] = CreateThread(NULL, 0, RecvThread, (LPVOID)client_sock, 0, NULL);
+			sendHandle[1] = CreateThread(NULL, 0, SendThread, (LPVOID)client_sock, 0, NULL);
+			player2ID = GetThreadId(recvHandle[1]);
+			playerS2ID = GetThreadId(sendHandle[1]);
+			now_play = TRUE;
 		}
+	}
+	while (1) {
+		WaitForMultipleObjects(2, wait_Recv, TRUE, 16);
+
+		// Calc Elapsed Time
+		if (g_PrevTime == 0) {
+			g_PrevTime = GetTickCount();
+			return 0;
+		}
+		DWORD CurTime = GetTickCount();
+		DWORD ElapsedTime = CurTime - g_PrevTime;
+		g_PrevTime = CurTime;
+
+		eTime = (float)ElapsedTime / 1000.0f;
+
+		// Calc Shoot Delay
+		DWORD ShootCurTime = GetTickCount();
+		ShootElapsedTime = ShootCurTime - g_ShootStartTime;
+
+		//Apply Force
+		float forceX1 = 0.0f, forceX2 = 0.0f;
+		float forceY1 = 0.0f, forceY2 = 0.0f;
+		float forceZ = 0.0f;
+		float amount = 1.0f;
+		int bulletID = SHOOT_NONE;
+
+		//1p,2p 키입력을 통한 연산
+		if (player1EventSize == 8) {
+			forceY1 += amount * player1Event.front();
+			player1Event.pop_front();
+			player1EventSize -= 1;
+			forceX1 -= amount * player1Event.front();
+			player1Event.pop_front();
+			player1EventSize -= 1;
+			forceY1 -= amount * player1Event.front();
+			player1Event.pop_front();
+			player1EventSize -= 1;
+			forceX1 += amount * player1Event.front();
+			player1Event.pop_front();
+			player1EventSize -= 1;
+			g_ScnMgr->ApplyForce(forceX1, forceY1, forceZ, HERO_ID, eTime);
+
+			//총알키값
+			for (int i = 0; i < 4; i++) {
+				if (player1Event.front() == TRUE)
+					bulletID = i + 1;
+				player1Event.pop_front();
+				player1EventSize -= 1;
+			}
+			if (ShootElapsedTime % 50 == 0) { // Shoot
+				g_ScnMgr->Shoot(HERO_ID, bulletID);
+			}
+		}
+		if (player2EventSize == 8) {
+			forceY2 += amount * player2Event.front();
+			player2Event.pop_front();
+			player2EventSize -= 1;
+			forceX2 -= amount * player2Event.front();
+			player2Event.pop_front();
+			player2EventSize -= 1;
+			forceY2 -= amount * player2Event.front();
+			player2Event.pop_front();
+			player2EventSize -= 1;
+			forceX2 += amount * player2Event.front();
+			player2Event.pop_front();
+			player2EventSize -= 1;
+			g_ScnMgr->ApplyForce(forceX2, forceY2, forceZ, HERO_ID2, eTime);
+
+			//총알키값
+			for (int i = 0; i < 4; i++) {
+				if (player2Event.front() == TRUE)
+					bulletID = i + 1;
+				player2Event.pop_front();
+				player2EventSize -= 1;
+			}
+			if (ShootElapsedTime % 50 == 0) { // Shoot
+				g_ScnMgr->Shoot(HERO_ID2, bulletID);
+			}
+		}
+
+		g_ScnMgr->GarbageCollector();   // 화면 밖으로 나가는 오브젝트 삭제
+		g_ScnMgr->DoCollisionTest();
+		g_ScnMgr->Update(eTime);
+
+
+		SetEvent(wait_Logic[0]);
+		SetEvent(wait_Logic[1]);
+
 	}
 
 

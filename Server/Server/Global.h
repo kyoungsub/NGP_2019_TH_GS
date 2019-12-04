@@ -35,7 +35,7 @@
 
 #define SERVERIP   "127.0.0.1"
 #define SERVERPORT 9000
-#define BUFSIZE    1024
+#define BUFSIZE    2048
 
 #pragma pack(1)
 struct InitData {
