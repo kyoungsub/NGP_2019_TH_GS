@@ -41,6 +41,7 @@
 #pragma pack(1)
 struct recvData {
 	float posX, posY;
+	int SeqX, SeqY;
 	int type, idx_num;
 	int hp;
 };

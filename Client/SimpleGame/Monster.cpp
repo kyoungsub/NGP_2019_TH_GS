@@ -53,3 +53,8 @@ void Monster::GetSeqY(int * y)
 {
 	*y = m_SeqY;
 }
+
+void Monster::SetSeq(int x, int y) {
+	m_SeqX = x;
+	m_SeqY = y;
+}

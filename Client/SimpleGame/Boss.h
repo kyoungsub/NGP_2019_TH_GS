@@ -12,6 +12,8 @@ public:
 	void GetSeqX(int *x);
 	void GetSeqY(int *y);
 
+	void SetSeq(int x, int y);
+
 	void GetDir(int *x, int *y, int *z);
 	void SetDir(int x, int y, int z);
 

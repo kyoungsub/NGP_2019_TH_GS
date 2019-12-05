@@ -15,7 +15,7 @@ private:
 	Object *m_HP[20];
 	
 public:
-
+	EventSet eventflag;
 	Object *m_Objects[MAX_OBJECTS];
 
 	ScnMgr();

@@ -37,19 +37,22 @@
 #define SERVERPORT 9000
 #define BUFSIZE    2048
 
-#pragma pack(1)
-struct InitData {
-	float mass;
-	float sizeX, sizeY, sizeZ;
-	float coef_Frict;
-};
-#pragma pack()
-
 //전송 구조체
 #pragma pack(1)
 struct SendData {
 	float posX, posY;
+	int SeqX, SeqY;
 	int type, idx_num;
 	int hp;
+};
+#pragma pack()
+
+#pragma pack(1)
+struct EventSet {
+	bool player1DoorCollision = FALSE;
+	bool player2DoorCollision = FALSE;
+	bool BossDead = FALSE;
+	bool diedPlayer1 = FALSE;
+	bool diedPlayer2 = FALSE;
 };
 #pragma pack()

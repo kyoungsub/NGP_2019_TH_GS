@@ -85,6 +85,11 @@ void Boss::GetSeqY(int * y)
 	*y = m_SeqY;
 }
 
+void Boss::SetSeq(int x, int y) {
+	m_SeqX = x;
+	m_SeqY = y;
+}
+
 void Boss::GetDir(int * x, int * y, int * z)
 {
 	*x = m_DirX;

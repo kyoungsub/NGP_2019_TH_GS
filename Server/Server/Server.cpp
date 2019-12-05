@@ -103,31 +103,9 @@ DWORD WINAPI RecvThread(LPVOID arg)
 	getpeername(client_sock, (SOCKADDR*)& clientaddr, &addrlen);
 
 	if (GetCurrentThreadId() == player1ID) {
-		g_ScnMgr->m_Objects[HERO_ID] = new Object();
-		g_ScnMgr->m_Objects[HERO_ID]->SetPos(-0.5f, 0.0f, 0.0f);
-		g_ScnMgr->m_Objects[HERO_ID]->SetVel(0.f, 0.f, 0.f);
-		g_ScnMgr->m_Objects[HERO_ID]->SetAcc(0.0f, 0.0f, 0.0f);
-		g_ScnMgr->m_Objects[HERO_ID]->SetSize(0.6f, 0.6f, 0.6f);
-		g_ScnMgr->m_Objects[HERO_ID]->SetMass(0.15f);
-		g_ScnMgr->m_Objects[HERO_ID]->SetCoefFrict(0.5f);
-		g_ScnMgr->m_Objects[HERO_ID]->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
-		g_ScnMgr->m_Objects[HERO_ID]->SetKind(KIND_HERO);
-		g_ScnMgr->m_Objects[HERO_ID]->SetHP(240);
-		g_ScnMgr->m_Objects[HERO_ID]->SetState(STATE_GROUND);
 		player_num = HERO_ID;
 	}
 	else if (GetCurrentThreadId() == player2ID) {
-		g_ScnMgr->m_Objects[HERO_ID2] = new Object();
-		g_ScnMgr->m_Objects[HERO_ID2]->SetPos(0.5f, 0.0f, 0.0f);
-		g_ScnMgr->m_Objects[HERO_ID2]->SetVel(0.f, 0.f, 0.f);
-		g_ScnMgr->m_Objects[HERO_ID2]->SetAcc(0.0f, 0.0f, 0.0f);
-		g_ScnMgr->m_Objects[HERO_ID2]->SetSize(0.6f, 0.6f, 0.6f);
-		g_ScnMgr->m_Objects[HERO_ID2]->SetMass(0.15f);
-		g_ScnMgr->m_Objects[HERO_ID2]->SetCoefFrict(0.5f);
-		g_ScnMgr->m_Objects[HERO_ID2]->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
-		g_ScnMgr->m_Objects[HERO_ID2]->SetKind(KIND_HERO);
-		g_ScnMgr->m_Objects[HERO_ID2]->SetHP(240);
-		g_ScnMgr->m_Objects[HERO_ID2]->SetState(STATE_GROUND);
 		player_num = HERO_ID2;
 	}
 
@@ -139,19 +117,6 @@ DWORD WINAPI RecvThread(LPVOID arg)
 		send(client_sock, (char*)&now_play, sizeof(bool), 0);
 	else if(player_num == 1)
 		send(client_sock, (char*)&now_play, sizeof(bool), 0);
-
-	// Create Door
-	g_ScnMgr->m_Objects[2] = new Object();
-	g_ScnMgr->m_Objects[2]->SetPos(0.0f, 1.25f, 0.0f);
-	g_ScnMgr->m_Objects[2]->SetVel(0.f, 0.f, 0.f);
-	g_ScnMgr->m_Objects[2]->SetAcc(0.0f, 0.0f, 0.0f);
-	g_ScnMgr->m_Objects[2]->SetSize(1.0f, 1.0f, 1.0f);
-	g_ScnMgr->m_Objects[2]->SetMass(0.15f);
-	g_ScnMgr->m_Objects[2]->SetCoefFrict(0.5f);
-	g_ScnMgr->m_Objects[2]->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
-	g_ScnMgr->m_Objects[2]->SetKind(KIND_BOSS_DOOR);
-	g_ScnMgr->m_Objects[2]->SetHP(240);
-	g_ScnMgr->m_Objects[2]->SetState(STATE_GROUND);
 	
 
 	//Recv Data
@@ -176,10 +141,7 @@ DWORD WINAPI RecvThread(LPVOID arg)
 			}
 		}
 
-		if (player_num == HERO_ID)
-			SetEvent(wait_Recv[0]);
-		else if (player_num == HERO_ID2)
-			SetEvent(wait_Recv[1]);
+		SetEvent(wait_Recv[player_num]);
 	}
 	return 0;
 }
@@ -215,6 +177,19 @@ DWORD WINAPI SendThread(LPVOID arg)
 				g_ScnMgr->m_Objects[i]->GetHP(&sData.hp);
 				sData.idx_num = i;
 
+				if (sData.type == KIND_BOSS) {
+					dynamic_cast<Boss*>(g_ScnMgr->m_Objects[i])->GetSeqX(&sData.SeqX);
+					dynamic_cast<Boss*>(g_ScnMgr->m_Objects[i])->GetSeqY(&sData.SeqY);
+				}
+				else if (sData.type == KIND_MONSTER) {
+					dynamic_cast<Monster*>(g_ScnMgr->m_Objects[i])->GetSeqX(&sData.SeqX);
+					dynamic_cast<Monster*>(g_ScnMgr->m_Objects[i])->GetSeqY(&sData.SeqY);
+				}
+				else {
+					sData.SeqX = 0;
+					sData.SeqY = 0;
+				}
+
 				memcpy(buf + read_data, (void*)&sData, sizeof(SendData));
 				read_data += sizeof(SendData);
 			}
@@ -229,7 +204,44 @@ DWORD WINAPI SendThread(LPVOID arg)
 	return 0;
 }
 
+void Initialize_data() {
+	g_ScnMgr->m_Objects[HERO_ID] = new Object();
+	g_ScnMgr->m_Objects[HERO_ID]->SetPos(-0.5f, 0.0f, 0.0f);
+	g_ScnMgr->m_Objects[HERO_ID]->SetVel(0.f, 0.f, 0.f);
+	g_ScnMgr->m_Objects[HERO_ID]->SetAcc(0.0f, 0.0f, 0.0f);
+	g_ScnMgr->m_Objects[HERO_ID]->SetSize(0.6f, 0.6f, 0.6f);
+	g_ScnMgr->m_Objects[HERO_ID]->SetMass(0.15f);
+	g_ScnMgr->m_Objects[HERO_ID]->SetCoefFrict(0.5f);
+	g_ScnMgr->m_Objects[HERO_ID]->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+	g_ScnMgr->m_Objects[HERO_ID]->SetKind(KIND_HERO);
+	g_ScnMgr->m_Objects[HERO_ID]->SetHP(240);
+	g_ScnMgr->m_Objects[HERO_ID]->SetState(STATE_GROUND);
 
+	g_ScnMgr->m_Objects[HERO_ID2] = new Object();
+	g_ScnMgr->m_Objects[HERO_ID2]->SetPos(0.5f, 0.0f, 0.0f);
+	g_ScnMgr->m_Objects[HERO_ID2]->SetVel(0.f, 0.f, 0.f);
+	g_ScnMgr->m_Objects[HERO_ID2]->SetAcc(0.0f, 0.0f, 0.0f);
+	g_ScnMgr->m_Objects[HERO_ID2]->SetSize(0.6f, 0.6f, 0.6f);
+	g_ScnMgr->m_Objects[HERO_ID2]->SetMass(0.15f);
+	g_ScnMgr->m_Objects[HERO_ID2]->SetCoefFrict(0.5f);
+	g_ScnMgr->m_Objects[HERO_ID2]->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+	g_ScnMgr->m_Objects[HERO_ID2]->SetKind(KIND_HERO);
+	g_ScnMgr->m_Objects[HERO_ID2]->SetHP(240);
+	g_ScnMgr->m_Objects[HERO_ID2]->SetState(STATE_GROUND);
+
+	// Create Door
+	g_ScnMgr->m_Objects[2] = new Object();
+	g_ScnMgr->m_Objects[2]->SetPos(0.0f, 1.25f, 0.0f);
+	g_ScnMgr->m_Objects[2]->SetVel(0.f, 0.f, 0.f);
+	g_ScnMgr->m_Objects[2]->SetAcc(0.0f, 0.0f, 0.0f);
+	g_ScnMgr->m_Objects[2]->SetSize(1.0f, 1.0f, 1.0f);
+	g_ScnMgr->m_Objects[2]->SetMass(0.15f);
+	g_ScnMgr->m_Objects[2]->SetCoefFrict(0.5f);
+	g_ScnMgr->m_Objects[2]->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+	g_ScnMgr->m_Objects[2]->SetKind(KIND_BOSS_DOOR);
+	g_ScnMgr->m_Objects[2]->SetHP(240);
+	g_ScnMgr->m_Objects[2]->SetState(STATE_GROUND);
+}
 
 int main(int argc, char* argv[])
 {
@@ -265,6 +277,9 @@ int main(int argc, char* argv[])
 	//게임로직
 	g_PrevTime = GetTickCount();
 	g_ScnMgr = new ScnMgr();
+
+	//객체 초기화
+	Initialize_data();
 
 	wait_Recv[0] = CreateEvent(NULL, FALSE, FALSE, NULL);
 	wait_Recv[1] = CreateEvent(NULL, FALSE, FALSE, NULL);
@@ -320,7 +335,8 @@ int main(int argc, char* argv[])
 		float forceY1 = 0.0f, forceY2 = 0.0f;
 		float forceZ = 0.0f;
 		float amount = 1.0f;
-		int bulletID = SHOOT_NONE;
+		int bulletID1 = SHOOT_NONE;
+		int bulletID2 = SHOOT_NONE;
 
 		//1p,2p 키입력을 통한 연산
 		if (player1EventSize == 8) {
@@ -341,12 +357,12 @@ int main(int argc, char* argv[])
 			//총알키값
 			for (int i = 0; i < 4; i++) {
 				if (player1Event.front() == TRUE)
-					bulletID = i + 1;
+					bulletID1 = i + 1;
 				player1Event.pop_front();
 				player1EventSize -= 1;
 			}
 			if (ShootElapsedTime % 50 == 0) { // Shoot
-				g_ScnMgr->Shoot(HERO_ID, bulletID);
+				g_ScnMgr->Shoot(HERO_ID, bulletID1);
 			}
 		}
 		if (player2EventSize == 8) {
@@ -367,12 +383,12 @@ int main(int argc, char* argv[])
 			//총알키값
 			for (int i = 0; i < 4; i++) {
 				if (player2Event.front() == TRUE)
-					bulletID = i + 1;
+					bulletID2 = i + 1;
 				player2Event.pop_front();
 				player2EventSize -= 1;
 			}
 			if (ShootElapsedTime % 50 == 0) { // Shoot
-				g_ScnMgr->Shoot(HERO_ID2, bulletID);
+				g_ScnMgr->Shoot(HERO_ID2, bulletID2);
 			}
 		}
 

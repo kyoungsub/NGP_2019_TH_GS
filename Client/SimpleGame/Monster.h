@@ -12,6 +12,8 @@ public:
 	void GetSeqX(int *x);
 	void GetSeqY(int *y);
 
+	void SetSeq(int x, int y);
+
 private:
 	float m_AnimationNextTime = 0.02f;
 	float m_AnimationNextCurTime = 0.02f;

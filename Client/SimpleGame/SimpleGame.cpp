@@ -165,6 +165,7 @@ DWORD WINAPI RecvThread(LPVOID arg)
 					g_ScnMgr->AddObject(rData.posX, rData.posY, 0.f, 1.f, 1.f, 1.f, 0, 0, 0, KIND_BOSS, 200, idx_num);
 				}
 				g_ScnMgr->m_Objects[rData.idx_num]->SetPos(rData.posX, rData.posY, temp);
+				dynamic_cast<Boss*>(g_ScnMgr->m_Objects[rData.idx_num])->SetSeq(rData.SeqX, rData.SeqY);
 			}
 			else if (rData.type == KIND_MONSTER) {
 				// Create MONSTER
@@ -172,6 +173,7 @@ DWORD WINAPI RecvThread(LPVOID arg)
 					g_ScnMgr->AddObject(rData.posX, rData.posY, 0.f, 0.6f, 0.6f, 0.6f, 0, 0, 0, KIND_MONSTER, 60, idx_num);
 				}
 				g_ScnMgr->m_Objects[rData.idx_num]->SetPos(rData.posX, rData.posY, temp);
+				dynamic_cast<Monster*>(g_ScnMgr->m_Objects[rData.idx_num])->SetSeq(rData.SeqX, rData.SeqY);
 			}
 
 			curread += sizeof(recvData);

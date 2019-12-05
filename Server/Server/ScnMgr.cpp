@@ -357,8 +357,9 @@ void ScnMgr::DoCollisionTest()
 					continue;
 				}
 				// BOSSDOOR와 충돌 했을 때
-				else if (kind == KIND_HERO && kind1 == KIND_BOSS_DOOR || kind == KIND_BOSS_DOOR && kind1 == KIND_HERO || kind == KIND_BULLET && kind1 == KIND_BOSS_DOOR || kind == KIND_BOSS_DOOR && kind1 == KIND_BULLET || kind == KIND_EFFECT && kind1 == KIND_BOSS_DOOR || kind == KIND_BOSS_DOOR && kind1 == KIND_EFFECT) {
+				else if (kind == KIND_HERO && kind1 == KIND_BOSS_DOOR || kind == KIND_BOSS_DOOR && kind1 == KIND_HERO ) {
 					if (RRCollision(minX, minY, minZ, maxX, maxY, maxZ, minX1, minY1, minZ1, maxX1, maxY1, maxZ1)) {
+
 						// Delete Door Object
 						if (kind == KIND_BOSS_DOOR) {
 							DeleteObject(2);
@@ -379,6 +380,7 @@ void ScnMgr::DoCollisionTest()
 						m_Objects[2]->SetKind(KIND_BOSS);
 						m_Objects[2]->SetHP(200);
 						m_Objects[2]->SetState(STATE_GROUND);
+						
 					}
 					continue;
 				}
