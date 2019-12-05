@@ -135,11 +135,12 @@ void ScnMgr::RenderScene()
 				);
 			}
 			else if (kind == KIND_MONSTER) {
-				int SeqX, SeqY;
+				int SeqX = 0, SeqY = 0;
 
-				dynamic_cast<Monster*>(m_Objects[i])->GetSeqX(&SeqX);
-				dynamic_cast<Monster*>(m_Objects[i])->GetSeqY(&SeqY);
-
+				if (m_Objects[i] != NULL) {
+					dynamic_cast<Monster*>(m_Objects[i])->GetSeqX(&SeqX);
+					dynamic_cast<Monster*>(m_Objects[i])->GetSeqY(&SeqY);
+				}
 				m_Renderer->DrawTextureRectSeqXY(
 					newX, newY, 0.0f,
 					newsX, newsY,
@@ -149,11 +150,12 @@ void ScnMgr::RenderScene()
 				);
 			}
 			else if (kind == KIND_BOSS) {
-				int SeqX, SeqY;
+				int SeqX = 0, SeqY = 0;
 
-				dynamic_cast<Boss*>(m_Objects[i])->GetSeqX(&SeqX);
-				dynamic_cast<Boss*>(m_Objects[i])->GetSeqY(&SeqY);
-
+				if (m_Objects[i] != NULL) {
+					dynamic_cast<Boss*>(m_Objects[i])->GetSeqX(&SeqX);
+					dynamic_cast<Boss*>(m_Objects[i])->GetSeqY(&SeqY);
+				}
 				m_Renderer->DrawTextureRectSeqXY(
 					newX, newY, 0.0f,
 					newsX, newsY,
@@ -204,16 +206,28 @@ void ScnMgr::RenderScene()
 			int hp;
 			float gauge;
 
-			m_Objects[i]->GetHP(&hp);
-			gauge = hp / 200.0f;
+			if (m_Objects[i] != NULL) {
+				m_Objects[i]->GetHP(&hp);
+				gauge = hp / 200.0f;
 
-			if (kind == KIND_BOSS) {
-				m_Renderer->DrawSolidRectGauge(
-					0.0f, newsY + 75.0f, 0,
-					newsX * 3, 10,
-					1, 0, 0, 1,
-					newZ,
-					gauge);
+				if (kind == KIND_BOSS) {
+					m_Renderer->DrawSolidRectGauge(
+						0.0f, newsY + 75.0f, 0,
+						newsX * 3, 10,
+						1, 0, 0, 1,
+						newZ,
+						gauge);
+				}
+			}
+			else {
+				if (kind == KIND_BOSS) {
+					m_Renderer->DrawSolidRectGauge(
+						0.0f, newsY + 75.0f, 0,
+						newsX * 3, 10,
+						1, 0, 0, 1,
+						newZ,
+						0);
+				}
 			}
 		}
 	}

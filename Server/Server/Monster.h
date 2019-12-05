@@ -4,6 +4,8 @@ class Monster :
 	public Object
 {
 public:
+	int target;
+
 	Monster();
 	virtual ~Monster();
 

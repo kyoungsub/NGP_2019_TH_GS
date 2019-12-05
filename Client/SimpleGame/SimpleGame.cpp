@@ -38,6 +38,7 @@ int g_Shoot = SHOOT_NONE;
 
 bool now_play = FALSE;
 HANDLE wait_start;
+HANDLE wait_Update;
 
 SOCKET g_sock;
 
@@ -107,19 +108,20 @@ DWORD WINAPI RecvThread(LPVOID arg)
 		recvn(sock, buf, len, 0);
 
 		
-		if (len <= 60) {			
+		//if (len <= 84) {			
 			// Garbage Collector
 			for (int i = 3; i < MAX_OBJECTS; ++i) {
 				if (g_ScnMgr->m_Objects[i] != NULL) {
 					g_ScnMgr->DeleteObject(i);
 				}
 			}
-		}
+		//}
 		
 		while (len > 0) {
 			
 			memcpy((void*)&rData, buf + curread, sizeof(recvData));
 
+			
 			int idx_num = rData.idx_num;
 
 			if (rData.type == KIND_HERO) {
@@ -153,7 +155,7 @@ DWORD WINAPI RecvThread(LPVOID arg)
 				}
 			}
 			else if (rData.type == KIND_BOSS) {
-				// Create BOSS
+				// Create BOSS 
 				if (g_ScnMgr->m_Objects[rData.idx_num] == NULL) {
 					g_ScnMgr->AddObject(rData.posX, rData.posY, 0.f, 1.f, 1.f, 1.f, 0, 0, 0, KIND_BOSS, 200, idx_num);
 				}
@@ -165,20 +167,27 @@ DWORD WINAPI RecvThread(LPVOID arg)
 					g_ScnMgr->AddObject(rData.posX, rData.posY, 0.f, 1.f, 1.f, 1.f, 0, 0, 0, KIND_BOSS, 200, idx_num);
 				}
 				g_ScnMgr->m_Objects[rData.idx_num]->SetPos(rData.posX, rData.posY, temp);
-				dynamic_cast<Boss*>(g_ScnMgr->m_Objects[rData.idx_num])->SetSeq(rData.SeqX, rData.SeqY);
+
+				if (kind == KIND_BOSS)
+					dynamic_cast<Boss*>(g_ScnMgr->m_Objects[rData.idx_num])->SetSeq(rData.SeqX, rData.SeqY);
 			}
-			else if (rData.type == KIND_MONSTER) {
+			else if (rData.type == KIND_MONSTER) {				
 				// Create MONSTER
 				if (g_ScnMgr->m_Objects[rData.idx_num] == NULL) {
 					g_ScnMgr->AddObject(rData.posX, rData.posY, 0.f, 0.6f, 0.6f, 0.6f, 0, 0, 0, KIND_MONSTER, 60, idx_num);
 				}
 				g_ScnMgr->m_Objects[rData.idx_num]->SetPos(rData.posX, rData.posY, temp);
-				dynamic_cast<Monster*>(g_ScnMgr->m_Objects[rData.idx_num])->SetSeq(rData.SeqX, rData.SeqY);
+
+				int kind;
+				g_ScnMgr->m_Objects[rData.idx_num]->GetKind(&kind);
+				if(kind == KIND_MONSTER)
+					dynamic_cast<Monster*>(g_ScnMgr->m_Objects[rData.idx_num])->SetSeq(rData.SeqX, rData.SeqY);
 			}
 
 			curread += sizeof(recvData);
 			len -= sizeof(recvData);
 		}
+		SetEvent(wait_Update);
 	}
 
 	return 0;
@@ -250,11 +259,14 @@ DWORD WINAPI SendThread(LPVOID arg)
 
 void RenderScene(int temp) {
 
-	g_ScnMgr->RenderScene();   // Render   
-	
+	WaitForSingleObject(wait_Update, INFINITE);
+	g_ScnMgr->RenderScene();   // Render   	
+
 	glutSwapBuffers();
 
+	ResetEvent(wait_Update);
 	glutTimerFunc(16, RenderScene, 0);
+
 }
 
 void Display(void) {
@@ -390,6 +402,8 @@ int main(int argc, char **argv) {
 	// Init ScnMgr
 	g_ScnMgr = new ScnMgr();
 
+	
+
 	HANDLE hThread[2];
 
 	wait_start = CreateEvent(NULL, TRUE, FALSE, NULL);
@@ -397,6 +411,8 @@ int main(int argc, char **argv) {
 	while (now_play == FALSE) {
 		recvn(g_sock, (char*)&now_play, sizeof(bool), 0);
 	}
+
+	wait_Update = CreateEvent(NULL, FALSE, FALSE, NULL);
 
 	hThread[0] = CreateThread(NULL, 0, RecvThread, (LPVOID)g_sock, 0, NULL);
 	hThread[1] = CreateThread(NULL, 0, SendThread, (LPVOID)g_sock, 0, NULL);

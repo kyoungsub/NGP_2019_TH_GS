@@ -37,6 +37,7 @@ ScnMgr::~ScnMgr()
 void ScnMgr::Update(float eTime)
 {
 	int kind;
+	
 
 	if (PLAY) {
 		for (int i = 0; i < MAX_OBJECTS; ++i) {
@@ -46,14 +47,14 @@ void ScnMgr::Update(float eTime)
 
 				if (kind == KIND_MONSTER) {
 					float x, y, z;
-					m_Objects[HERO_ID]->GetPos(&x, &y, &z);
+					m_Objects[dynamic_cast<Monster*>(m_Objects[i])->target]->GetPos(&x, &y, &z);
 					x += 0.1f, y += 0.1f;
 					dynamic_cast<Monster*>(m_Objects[i])->Update(x, y, z, eTime);
 				}
 				else if (kind == KIND_BOSS) {
 					dynamic_cast<Boss*>(m_Objects[2])->Update(eTime);
-					//m_SpawnNextCurTime -= eTime;
-					/*
+					m_SpawnNextCurTime -= eTime;
+					
 					if (m_SpawnNextCurTime <= 0.f)
 					{
 						float x, y, z;
@@ -68,7 +69,7 @@ void ScnMgr::Update(float eTime)
 						m_SpawnNextTime = 0.1f;
 						m_SpawnNextCurTime = 0.1f;
 					}
-					*/
+					
 				}
 				else if (kind == KIND_EFFECT) {
 					dynamic_cast<Effect*>(m_Objects[i])->Update(eTime);
@@ -96,16 +97,16 @@ void ScnMgr::GarbageCollector()
 
 			if (kind == KIND_HERO) {
 				if (hp <= 0) {
-					DeleteObject(i);
-					AddObject(0.0f, -0.5f, 0.0f, 4.0f, 4.0f, 4.0f, 0.0f, 0.0f, 0.0f, kIND_DEATH, 20, STATE_GROUND);
+					//DeleteObject(i);
+					//AddObject(0.0f, -0.5f, 0.0f, 4.0f, 4.0f, 4.0f, 0.0f, 0.0f, 0.0f, kIND_DEATH, 20, STATE_GROUND);
 					PLAY = FALSE;
 					continue;
 				}
 			}
 			if (kind == KIND_BOSS) {
 				if (hp <= 0) {
-					DeleteObject(i);
-					AddObject(0.0f, -0.5f, 0.0f, 4.0f, 4.0f, 4.0f, 0.0f, 0.0f, 0.0f, KIND_WIN, 20, STATE_GROUND);
+					//DeleteObject(i);
+					//AddObject(0.0f, -0.5f, 0.0f, 4.0f, 4.0f, 4.0f, 0.0f, 0.0f, 0.0f, KIND_WIN, 20, STATE_GROUND);
 					PLAY = FALSE;
 					continue;
 				}
@@ -125,7 +126,7 @@ void ScnMgr::GarbageCollector()
 					m_Objects[i]->GetPos(&px, &py, &pz);
 					m_Objects[i]->GetSize(&sx, &sy, &sz);
 
-					AddObject(px, py, pz, sx, sy, sz, 0.0f, 0.0f, 0.0f, KIND_EFFECT, 20, STATE_AIR);
+					//AddObject(px, py, pz, sx, sy, sz, 0.0f, 0.0f, 0.0f, KIND_EFFECT, 20, STATE_AIR);
 
 					DeleteObject(i);
 					continue;
@@ -137,7 +138,7 @@ void ScnMgr::GarbageCollector()
 					m_Objects[i]->GetPos(&px, &py, &pz);
 					m_Objects[i]->GetSize(&sx, &sy, &sz);
 
-					AddObject(px, py, pz, sx, sy, sz, 0.0f, 0.0f, 0.0f, KIND_EFFECT, 20, STATE_AIR);
+					//AddObject(px, py, pz, sx, sy, sz, 0.0f, 0.0f, 0.0f, KIND_EFFECT, 20, STATE_AIR);
 
 					DeleteObject(i);
 					//m_Sound->PlaySound(m_SoundTearsImpacts, false, 0.5f);
@@ -150,7 +151,7 @@ void ScnMgr::GarbageCollector()
 					m_Objects[i]->GetPos(&px, &py, &pz);
 					m_Objects[i]->GetSize(&sx, &sy, &sz);
 
-					AddObject(px, py, pz, sx, sy, sz, 0.0f, 0.0f, 0.0f, KIND_EFFECT, 20, STATE_AIR);
+					//AddObject(px, py, pz, sx, sy, sz, 0.0f, 0.0f, 0.0f, KIND_EFFECT, 20, STATE_AIR);
 
 					DeleteObject(i);
 					//m_Sound->PlaySound(m_SoundTearsImpacts, false, 0.5f);
@@ -385,7 +386,7 @@ void ScnMgr::DoCollisionTest()
 					continue;
 				}
 				else {
-					/*
+					
 					if (RRCollision(minX, minY, minZ, maxX, maxY, maxZ, minX1, minY1, minZ1, maxX1, maxY1, maxZ1)) {
 						collisonCount++;
 
@@ -397,7 +398,7 @@ void ScnMgr::DoCollisionTest()
 							ProcessCollison(i, j);
 						}
 					}
-					*/
+					
 				}
 			}
 		}
@@ -467,7 +468,7 @@ void ScnMgr::ProcessCollison(int i, int j)
 
 		int index = 0;
 		int SeqX = 0;
-
+		/*
 		if (m_HP[index] != NULL) {
 			index = hp / 40 / 2;
 			SeqX = hp / 40 % 2;
@@ -478,6 +479,7 @@ void ScnMgr::ProcessCollison(int i, int j)
 
 			dynamic_cast<UI*>(m_HP[index])->SetSeqX(SeqX);
 		}
+		*/
 		//m_Sound->PlaySound(m_SoundHurt, false, 0.1f);
 	}
 	if (kind1 == KIND_BOSS && kind2 == KIND_HERO || kind1 == KIND_MONSTER && kind2 == KIND_HERO) {
@@ -492,7 +494,7 @@ void ScnMgr::ProcessCollison(int i, int j)
 
 		int index = 0;
 		int SeqX = 0;
-
+		/*
 		if (m_HP[index] != NULL) {
 			index = hp / 40 / 2;
 			SeqX = hp / 40 % 2;
@@ -503,6 +505,7 @@ void ScnMgr::ProcessCollison(int i, int j)
 
 			dynamic_cast<UI*>(m_HP[index])->SetSeqX(SeqX);
 		}
+		*/
 		//m_Sound->PlaySound(m_SoundHurt, false, 0.1f);
 	}
 }

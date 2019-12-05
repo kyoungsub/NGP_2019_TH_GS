@@ -5,6 +5,7 @@ int g_SeqM = 0;
 
 Monster::Monster()
 {
+	target = rand() % 2;
 }
 
 

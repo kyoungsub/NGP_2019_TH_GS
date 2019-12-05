@@ -110,7 +110,7 @@ DWORD WINAPI RecvThread(LPVOID arg)
 	}
 
 	while (now_play == FALSE) {
-		send(client_sock, (char*)&now_play, sizeof(bool), 0);
+		
 	}
 
 	if(player_num == 0)
