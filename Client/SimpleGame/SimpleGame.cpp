@@ -147,15 +147,17 @@ DWORD WINAPI RecvThread(LPVOID arg)
 
 				int index = rData.hp / 40 / 2;
 				int SeqX = rData.hp / 40 % 2;
-				int hp;
+				int hp;		
 
-				if (SeqX == 0) {
-					g_ScnMgr->DeleteUI(index);
-				}
+				if (index >= 0) {
+					if (SeqX == 0) {
+						g_ScnMgr->DeleteUI(idx_num, index);
+					}
 
-				if (g_ScnMgr->m_HP[index] != NULL) {					
-					g_ScnMgr->m_HP[index]->SetHP(rData.hp);								
-					dynamic_cast<UI*>(g_ScnMgr->m_HP[index])->SetSeqX(SeqX);
+					if (g_ScnMgr->m_HP[idx_num][index] != NULL) {
+						g_ScnMgr->m_HP[idx_num][index]->SetHP(rData.hp);
+						dynamic_cast<UI*>(g_ScnMgr->m_HP[idx_num][index])->SetSeqX(SeqX);
+					}
 				}
 
 			}

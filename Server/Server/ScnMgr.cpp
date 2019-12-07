@@ -494,25 +494,11 @@ void ScnMgr::ProcessCollison(int i, int j)
 
 		int hp;
 		obj1->GetHP(&hp);
-		hp -= 40;
-		obj1->SetHP(hp);
-
-		int uhp = 0;
-
-		int index = 0;
-		int SeqX = 0;
-		/*
-		if (m_HP[index] != NULL) {
-			index = hp / 40 / 2;
-			SeqX = hp / 40 % 2;
-
-			m_HP[index]->GetHP(&uhp);
-			uhp -= 40;
-			m_HP[index]->SetHP(uhp);
-
-			dynamic_cast<UI*>(m_HP[index])->SetSeqX(SeqX);
+		if (hp >= 40) {
+			hp -= 40;
+			obj1->SetHP(hp);
 		}
-		*/
+
 		//m_Sound->PlaySound(m_SoundHurt, false, 0.1f);
 	}
 	if (kind1 == KIND_BOSS && kind2 == KIND_HERO || kind1 == KIND_MONSTER && kind2 == KIND_HERO) {
@@ -520,25 +506,11 @@ void ScnMgr::ProcessCollison(int i, int j)
 
 		int hp;
 		obj2->GetHP(&hp);
-		hp -= 40;
-		obj2->SetHP(hp);
-
-		int uhp = 0;
-
-		int index = 0;
-		int SeqX = 0;
-		/*
-		if (m_HP[index] != NULL) {
-			index = hp / 40 / 2;
-			SeqX = hp / 40 % 2;
-
-			m_HP[index]->GetHP(&uhp);
-			uhp -= 40;
-			m_HP[index]->SetHP(uhp);
-
-			dynamic_cast<UI*>(m_HP[index])->SetSeqX(SeqX);
+		if (hp >= 40) {
+			hp -= 40;
+			obj2->SetHP(hp);
 		}
-		*/
+
 		//m_Sound->PlaySound(m_SoundHurt, false, 0.1f);
 	}
 }

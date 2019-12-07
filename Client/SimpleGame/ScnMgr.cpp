@@ -46,30 +46,54 @@ ScnMgr::ScnMgr()
 
 	// Creat HP UI
 
-	m_HP[0] = new UI();
-	m_HP[0]->SetPos(2.4f, 2.5f, 0.0f);
-	m_HP[0]->SetSize(0.3f, 0.3f, 0.3f);
-	m_HP[0]->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
-	m_HP[0]->SetKind(KIND_HP);
-	m_HP[0]->SetHP(80);
-	m_HP[0]->SetState(STATE_GROUND);
+	m_HP[HERO_ID][0] = new UI();
+	m_HP[HERO_ID][0]->SetPos(-2.4f, 2.5f, 0.0f);
+	m_HP[HERO_ID][0]->SetSize(0.3f, 0.3f, 0.3f);
+	m_HP[HERO_ID][0]->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+	m_HP[HERO_ID][0]->SetKind(KIND_HP);
+	m_HP[HERO_ID][0]->SetHP(80);
+	m_HP[HERO_ID][0]->SetState(STATE_GROUND);
 
-	m_HP[1] = new UI();
-	m_HP[1]->SetPos(2.7f, 2.5f, 0.0f);
-	m_HP[1]->SetSize(0.3f, 0.3f, 0.3f);
-	m_HP[1]->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
-	m_HP[1]->SetKind(KIND_HP);
-	m_HP[1]->SetHP(80);
-	m_HP[1]->SetState(STATE_GROUND);
+	m_HP[HERO_ID][1] = new UI();
+	m_HP[HERO_ID][1]->SetPos(-2.1f, 2.5f, 0.0f);
+	m_HP[HERO_ID][1]->SetSize(0.3f, 0.3f, 0.3f);
+	m_HP[HERO_ID][1]->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+	m_HP[HERO_ID][1]->SetKind(KIND_HP);
+	m_HP[HERO_ID][1]->SetHP(80);
+	m_HP[HERO_ID][1]->SetState(STATE_GROUND);
 
-	m_HP[2] = new UI();
-	m_HP[2]->SetPos(3.0f, 2.5f, 0.0f);
-	m_HP[2]->SetSize(0.3f, 0.3f, 0.3f);
-	m_HP[2]->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
-	m_HP[2]->SetKind(KIND_HP);
-	m_HP[2]->SetHP(80);
-	m_HP[2]->SetState(STATE_GROUND);
+	m_HP[HERO_ID][2] = new UI();
+	m_HP[HERO_ID][2]->SetPos(-1.8f, 2.5f, 0.0f);
+	m_HP[HERO_ID][2]->SetSize(0.3f, 0.3f, 0.3f);
+	m_HP[HERO_ID][2]->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+	m_HP[HERO_ID][2]->SetKind(KIND_HP);
+	m_HP[HERO_ID][2]->SetHP(80);
+	m_HP[HERO_ID][2]->SetState(STATE_GROUND);
 
+	m_HP[HERO_ID2][0] = new UI();
+	m_HP[HERO_ID2][0]->SetPos(2.4f, 2.5f, 0.0f);
+	m_HP[HERO_ID2][0]->SetSize(0.3f, 0.3f, 0.3f);
+	m_HP[HERO_ID2][0]->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+	m_HP[HERO_ID2][0]->SetKind(KIND_HP);
+	m_HP[HERO_ID2][0]->SetHP(80);
+	m_HP[HERO_ID2][0]->SetState(STATE_GROUND);
+
+	m_HP[HERO_ID2][1] = new UI();
+	m_HP[HERO_ID2][1]->SetPos(2.7f, 2.5f, 0.0f);
+	m_HP[HERO_ID2][1]->SetSize(0.3f, 0.3f, 0.3f);
+	m_HP[HERO_ID2][1]->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+	m_HP[HERO_ID2][1]->SetKind(KIND_HP);
+	m_HP[HERO_ID2][1]->SetHP(80);
+	m_HP[HERO_ID2][1]->SetState(STATE_GROUND);
+
+	m_HP[HERO_ID2][2] = new UI();
+	m_HP[HERO_ID2][2]->SetPos(3.0f, 2.5f, 0.0f);
+	m_HP[HERO_ID2][2]->SetSize(0.3f, 0.3f, 0.3f);
+	m_HP[HERO_ID2][2]->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+	m_HP[HERO_ID2][2]->SetKind(KIND_HP);
+	m_HP[HERO_ID2][2]->SetHP(80);
+	m_HP[HERO_ID2][2]->SetState(STATE_GROUND);
+	
 }
 
 ScnMgr::~ScnMgr()
@@ -232,34 +256,36 @@ void ScnMgr::RenderScene()
 			}
 		}
 	}
-	for (int i = 0; i < 3; ++i) {
-		if (m_HP[i] != NULL) {
-			float x, y, z, sizeX, sizeY, sizeZ, r, g, b, a;
+	for (int i = 0; i < 2; ++i) {
+		for (int j = 0; j < 3; ++j) {
+			if (m_HP[i][j] != NULL) {
+				float x, y, z, sizeX, sizeY, sizeZ, r, g, b, a;
 
-			m_HP[i]->GetPos(&x, &y, &z);
-			m_HP[i]->GetSize(&sizeX, &sizeY, &sizeZ);
-			m_HP[i]->GetColor(&r, &g, &b, &a);
+				m_HP[i][j]->GetPos(&x, &y, &z);
+				m_HP[i][j]->GetSize(&sizeX, &sizeY, &sizeZ);
+				m_HP[i][j]->GetColor(&r, &g, &b, &a);
 
-			float newX, newY, newZ, newsX, newsY, newsZ;
+				float newX, newY, newZ, newsX, newsY, newsZ;
 
-			newX = x * 100;
-			newY = y * 100;
-			newZ = z * 100;
+				newX = x * 100;
+				newY = y * 100;
+				newZ = z * 100;
 
-			newsX = sizeX * 100;
-			newsY = sizeY * 100;
-			newsZ = sizeZ * 100;
+				newsX = sizeX * 100;
+				newsY = sizeY * 100;
+				newsZ = sizeZ * 100;
 
-			int SeqX;
-			dynamic_cast<UI*>(m_HP[i])->GetSeqX(&SeqX);
+				int SeqX;
+				dynamic_cast<UI*>(m_HP[i][j])->GetSeqX(&SeqX);
 
-			m_Renderer->DrawTextureRectSeqXY(
-				newX, newY, 0.0f,
-				newsX, newsY,
-				r, g, b, a,
-				m_HPTexture, SeqX, 0,
-				5, 2
-			);
+				m_Renderer->DrawTextureRectSeqXY(
+					newX, newY, 0.0f,
+					newsX, newsY,
+					r, g, b, a,
+					m_HPTexture, SeqX, 0,
+					5, 2
+				);
+			}
 		}
 	}
 	g_time += 0.01f;
@@ -300,11 +326,11 @@ void ScnMgr::DeleteObject(int id)
 	}
 }
 
-void ScnMgr::DeleteUI(int id)
+void ScnMgr::DeleteUI(int player, int id)
 {
-	if (m_HP[id] != NULL) {
-		delete m_HP[id];
-		m_HP[id] = NULL;
+	if (m_HP[player][id] != NULL) {
+		delete m_HP[player][id];
+		m_HP[player][id] = NULL;
 	}
 }
 

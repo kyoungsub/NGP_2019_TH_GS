@@ -37,7 +37,7 @@ private:
 
 public:
 
-	Object *m_HP[20];
+	Object *m_HP[2][20];
 	Object *m_Objects[MAX_OBJECTS];
 	Renderer * m_Renderer;
 	BOOL player1;
@@ -49,7 +49,7 @@ public:
 	
 	void AddObject(float x, float y, float z, float sx, float sy, float sz, float vx, float vy, float vz, int kind, int hp, int idx_num);
 	void DeleteObject(int id);
-	void DeleteUI(int id);
+	void DeleteUI(int player, int id);
 
 	void ChangeMap(int kind);
 };
