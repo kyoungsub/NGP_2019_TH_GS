@@ -38,6 +38,7 @@ int g_Shoot = SHOOT_NONE;
 
 bool now_play = FALSE;
 bool map_switch = FALSE;
+bool disable_key = FALSE;
 EventSet eventbuf;
 HANDLE wait_start;
 HANDLE wait_Update;
@@ -110,6 +111,9 @@ DWORD WINAPI RecvThread(LPVOID arg)
 		recvn(sock, buf, len, 0);
 		recvn(sock, (char *)&eventbuf, sizeof(EventSet), 0);
 
+		if ((eventbuf.is_1p == FALSE && eventbuf.diedPlayer1 == TRUE) || (eventbuf.is_1p == TRUE && eventbuf.diedPlayer2 == TRUE))
+			disable_key = TRUE;
+
 		
 		//if (len <= 84) {			
 			// Garbage Collector
@@ -164,7 +168,7 @@ DWORD WINAPI RecvThread(LPVOID arg)
 			else if (rData.type == KIND_BULLET) {
 				// Create Bullet
 				if (g_ScnMgr->m_Objects[rData.idx_num] == NULL) {
-					g_ScnMgr->AddObject(0.f, 0.f, 0.f, 0.75f, 0.75f, 0.75f, 0, 0, 0, KIND_BULLET, 20, idx_num);
+					g_ScnMgr->AddObject(rData.posX, rData.posY, 0.f, 0.75f, 0.75f, 0.75f, 0, 0, 0, KIND_BULLET, 20, idx_num);
 				}
 				g_ScnMgr->m_Objects[rData.idx_num]->SetPos(rData.posX, rData.posY, temp);
 			}
@@ -195,7 +199,7 @@ DWORD WINAPI RecvThread(LPVOID arg)
 			else if (rData.type == KIND_MONSTER) {				
 				// Create MONSTER
 				if (g_ScnMgr->m_Objects[rData.idx_num] == NULL) {
-					g_ScnMgr->AddObject(rData.posX, rData.posY, 0.f, 0.6f, 0.6f, 0.6f, 0, 0, 0, KIND_MONSTER, 60, idx_num);
+					g_ScnMgr->AddObject(rData.posX, rData.posY, 0.f, 0.5f, 0.5f, 0.5f, 0, 0, 0, KIND_MONSTER, 60, idx_num);
 				}
 				g_ScnMgr->m_Objects[rData.idx_num]->SetPos(rData.posX, rData.posY, temp);
 
@@ -212,9 +216,8 @@ DWORD WINAPI RecvThread(LPVOID arg)
 			}
 			else if (rData.type == kIND_DEATH) {
 				// Create DEATH UI
-				if (g_ScnMgr->m_Objects[rData.idx_num] == NULL) {
-					g_ScnMgr->AddObject(rData.posX, rData.posY, 0.f, 4.0f, 4.0f, 4.0f, 0, 0, 0, kIND_DEATH, 20, idx_num);
-				}
+				g_ScnMgr->DeleteObject(2);
+				g_ScnMgr->AddObject(rData.posX, rData.posY, 0.f, 4.0f, 4.0f, 4.0f, 0, 0, 0, kIND_DEATH, 20, idx_num);
 			}
 
 
@@ -319,32 +322,36 @@ void MouseInput(int button, int state, int x, int y) {
 }
 
 void KeyDownInput(unsigned char key, int x, int y) {
-	if (key == 'w') {
-		g_KeyW = TRUE;
-	}
-	if (key == 's') {
-		g_KeyS = TRUE;
-	}
-	if (key == 'a') {
-		g_KeyA = TRUE;
-	}
-	if (key == 'd') {
-		g_KeyD = TRUE;
+	if (disable_key == FALSE) {
+		if (key == 'w') {
+			g_KeyW = TRUE;
+		}
+		if (key == 's') {
+			g_KeyS = TRUE;
+		}
+		if (key == 'a') {
+			g_KeyA = TRUE;
+		}
+		if (key == 'd') {
+			g_KeyD = TRUE;
+		}
 	}
 }
 
 void KeyUpInput(unsigned char key, int x, int y) {
-	if (key == 'w') {
-		g_KeyW = FALSE;
-	}
-	if (key == 's') {
-		g_KeyS = FALSE;
-	}
-	if (key == 'a') {
-		g_KeyA = FALSE;
-	}
-	if (key == 'd') {
-		g_KeyD = FALSE;
+	if (disable_key == FALSE) {
+		if (key == 'w') {
+			g_KeyW = FALSE;
+		}
+		if (key == 's') {
+			g_KeyS = FALSE;
+		}
+		if (key == 'a') {
+			g_KeyA = FALSE;
+		}
+		if (key == 'd') {
+			g_KeyD = FALSE;
+		}
 	}
 }
 
@@ -355,22 +362,24 @@ void SetKeyRepeat() {
 
 void SpecialKeyDownInput(int key, int x, int y) {
 
-	switch (key)
-	{
-	case GLUT_KEY_UP:
-		g_Shoot = SHOOT_UP;
-		break;
-	case GLUT_KEY_DOWN:
-		g_Shoot = SHOOT_DOWN;
-		break;
-	case GLUT_KEY_LEFT:
-		g_Shoot = SHOOT_LEFT;
-		break;
-	case GLUT_KEY_RIGHT:
-		g_Shoot = SHOOT_RIGHT;
-		break;
-	default:
-		break;
+	if (disable_key == FALSE) {
+		switch (key)
+		{
+		case GLUT_KEY_UP:
+			g_Shoot = SHOOT_UP;
+			break;
+		case GLUT_KEY_DOWN:
+			g_Shoot = SHOOT_DOWN;
+			break;
+		case GLUT_KEY_LEFT:
+			g_Shoot = SHOOT_LEFT;
+			break;
+		case GLUT_KEY_RIGHT:
+			g_Shoot = SHOOT_RIGHT;
+			break;
+		default:
+			break;
+		}
 	}
 
 }

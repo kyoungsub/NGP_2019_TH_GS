@@ -197,6 +197,7 @@ DWORD WINAPI SendThread(LPVOID arg)
 
 		EventSet eventbuf;
 		eventbuf = g_ScnMgr->eventflag;
+		eventbuf.is_1p = player_num;
 
 		send(client_sock, (char*)& read_data, sizeof(int), 0);
 		send(client_sock, buf, read_data, 0);

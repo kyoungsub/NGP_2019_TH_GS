@@ -53,5 +53,6 @@ struct EventSet {
 	bool BossDead = FALSE;
 	bool diedPlayer1 = FALSE;
 	bool diedPlayer2 = FALSE;
+	bool is_1p = FALSE;
 };
 #pragma pack()

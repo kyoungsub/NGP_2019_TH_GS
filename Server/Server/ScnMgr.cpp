@@ -62,7 +62,7 @@ void ScnMgr::Update(float eTime)
 						float x, y, z;
 						m_Objects[i]->GetPos(&x, &y, &z);
 						Spawncnt++;
-						if (Spawncnt > 20) {
+						if (Spawncnt > 100) {
 							Spawncnt = 0;
 							// Creat Test monster Object
 							AddObject(x, y, z, 0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 0.0f, KIND_MONSTER, 60, STATE_GROUND);
@@ -100,13 +100,18 @@ void ScnMgr::GarbageCollector()
 			if (kind == KIND_HERO) {
 				if (hp <= 0) {
 					//DeleteObject(i);
-					//AddObject(0.0f, -0.5f, 0.0f, 4.0f, 4.0f, 4.0f, 0.0f, 0.0f, 0.0f, kIND_DEATH, 20, STATE_GROUND);
 					if (i == HERO_ID) {
 						eventflag.diedPlayer1 = TRUE;
 					}
 					else if (i == HERO_ID2) {
 						eventflag.diedPlayer2 = TRUE;
 					}
+
+					if (eventflag.diedPlayer1 == TRUE && eventflag.diedPlayer2 == TRUE) {
+						//AddObject(0.0f, -0.5f, 0.0f, 4.0f, 4.0f, 4.0f, 0.0f, 0.0f, 0.0f, kIND_DEATH, 20, STATE_GROUND);
+						PLAY = FALSE;
+					}
+
 					continue;
 				}
 			}
