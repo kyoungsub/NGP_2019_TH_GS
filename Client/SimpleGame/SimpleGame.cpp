@@ -37,6 +37,7 @@ BOOL g_KeySP = FALSE;
 int g_Shoot = SHOOT_NONE;
 
 bool now_play = FALSE;
+bool map_switch = FALSE;
 EventSet eventbuf;
 HANDLE wait_start;
 HANDLE wait_Update;
@@ -96,7 +97,6 @@ DWORD WINAPI RecvThread(LPVOID arg)
 	int retval;
 	SOCKET sock = (SOCKET)arg; 
 	int len;
-	bool map_switch = FALSE;
 	
 	float temp = 0.f;
 	char buf[BUFSIZE];	
@@ -143,6 +143,7 @@ DWORD WINAPI RecvThread(LPVOID arg)
 					g_ScnMgr->m_Objects[idx_num]->SetState(STATE_GROUND);
 				}
 				g_ScnMgr->m_Objects[idx_num]->SetPos(rData.posX, rData.posY, temp);
+				g_ScnMgr->m_Objects[idx_num]->SetHP(rData.hp);
 			}
 			else if (rData.type == KIND_BULLET) {
 				// Create Bullet
@@ -165,6 +166,7 @@ DWORD WINAPI RecvThread(LPVOID arg)
 				int kind;
 
 				g_ScnMgr->m_Objects[rData.idx_num]->GetKind(&kind);
+				g_ScnMgr->m_Objects[idx_num]->SetHP(rData.hp);
 
 				if (kind == KIND_BOSS_DOOR) {
 					g_ScnMgr->AddObject(rData.posX, rData.posY, 0.f, 1.f, 1.f, 1.f, 0, 0, 0, KIND_BOSS, 200, idx_num);
@@ -191,10 +193,6 @@ DWORD WINAPI RecvThread(LPVOID arg)
 			len -= sizeof(recvData);
 		}
 
-		if (eventbuf.changeMap == TRUE && map_switch == FALSE) {
-			g_ScnMgr->ChangeMap(BOSSROOM);
-			map_switch = TRUE;
-		}
 		SetEvent(wait_Update);
 	}
 
@@ -268,7 +266,12 @@ DWORD WINAPI SendThread(LPVOID arg)
 void RenderScene(int temp) {
 
 	WaitForSingleObject(wait_Update, INFINITE);
-	g_ScnMgr->RenderScene();   // Render   	
+	g_ScnMgr->RenderScene();   // Render  
+
+	if (eventbuf.changeMap == TRUE && map_switch == FALSE) {
+		g_ScnMgr->ChangeMap(BOSSROOM);
+		map_switch = TRUE;
+	}
 
 	glutSwapBuffers();
 
