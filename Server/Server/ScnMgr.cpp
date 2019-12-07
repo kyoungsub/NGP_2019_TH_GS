@@ -101,7 +101,12 @@ void ScnMgr::GarbageCollector()
 				if (hp <= 0) {
 					//DeleteObject(i);
 					//AddObject(0.0f, -0.5f, 0.0f, 4.0f, 4.0f, 4.0f, 0.0f, 0.0f, 0.0f, kIND_DEATH, 20, STATE_GROUND);
-					PLAY = FALSE;
+					if (i == HERO_ID) {
+						eventflag.diedPlayer1 = TRUE;
+					}
+					else if (i == HERO_ID2) {
+						eventflag.diedPlayer2 = TRUE;
+					}
 					continue;
 				}
 			}
@@ -110,6 +115,7 @@ void ScnMgr::GarbageCollector()
 					//DeleteObject(i);
 					//AddObject(0.0f, -0.5f, 0.0f, 4.0f, 4.0f, 4.0f, 0.0f, 0.0f, 0.0f, KIND_WIN, 20, STATE_GROUND);
 					PLAY = FALSE;
+					eventflag.BossDead = TRUE;
 					continue;
 				}
 			}
