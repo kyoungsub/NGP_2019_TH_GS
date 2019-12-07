@@ -195,8 +195,12 @@ DWORD WINAPI SendThread(LPVOID arg)
 			}
 		}
 
-		retval = send(client_sock, (char*)& read_data, sizeof(int), 0);
-		retval = send(client_sock, buf, read_data, 0);
+		EventSet eventbuf;
+		eventbuf = g_ScnMgr->eventflag;
+
+		send(client_sock, (char*)& read_data, sizeof(int), 0);
+		send(client_sock, buf, read_data, 0);
+		send(client_sock, (char*)&eventbuf, sizeof(EventSet), 0);
 
 		ZeroMemory(buf, BUFSIZE);	
 	}

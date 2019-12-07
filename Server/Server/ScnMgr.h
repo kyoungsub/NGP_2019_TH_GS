@@ -13,6 +13,8 @@ class ScnMgr
 {
 private:
 	Object *m_HP[20];
+	bool player1DoorCollision = FALSE;
+	bool player2DoorCollision = FALSE;
 	
 public:
 	EventSet eventflag;
@@ -37,6 +39,7 @@ public:
 	bool RRCollision(float minX, float minY, float minZ, float maxX, float maxY, float maxZ, float minX1, float minY1, float minZ1, float maxX1, float maxY1, float maxZ1);
 	void ProcessCollison(int i, int j);
 
-	void ChangeMap(int kind);
+	void GetPlayerCollision(int player, bool* dest);
+	void SetPlayerCollision(int player);
 };
 

@@ -49,8 +49,7 @@ struct SendData {
 
 #pragma pack(1)
 struct EventSet {
-	bool player1DoorCollision = FALSE;
-	bool player2DoorCollision = FALSE;
+	bool changeMap = FALSE;
 	bool BossDead = FALSE;
 	bool diedPlayer1 = FALSE;
 	bool diedPlayer2 = FALSE;

@@ -46,3 +46,12 @@ struct recvData {
 	int hp;
 };
 #pragma pack()
+
+#pragma pack(1)
+struct EventSet {
+	bool changeMap = FALSE;
+	bool BossDead = FALSE;
+	bool diedPlayer1 = FALSE;
+	bool diedPlayer2 = FALSE;
+};
+#pragma pack()

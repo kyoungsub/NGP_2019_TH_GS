@@ -37,6 +37,8 @@ ScnMgr::~ScnMgr()
 void ScnMgr::Update(float eTime)
 {
 	int kind;
+	player1DoorCollision = FALSE;
+	player2DoorCollision = FALSE;
 	
 
 	if (PLAY) {
@@ -252,6 +254,22 @@ int ScnMgr::FindEmptyObjectSlot()
 	return -1;
 }
 
+void ScnMgr::GetPlayerCollision(int player, bool* dest)
+{
+	if (player == 1)
+		*dest = player1DoorCollision;
+	else if (player == 2)
+		*dest = player2DoorCollision;
+}
+
+void ScnMgr::SetPlayerCollision(int player)
+{
+	if (player == 1)
+		player1DoorCollision = TRUE;
+	if (player == 2)
+		player2DoorCollision = TRUE;
+}
+
 void ScnMgr::Shoot(int player, int shootID)
 {
 	if (shootID == SHOOT_NONE) {
@@ -361,27 +379,36 @@ void ScnMgr::DoCollisionTest()
 				else if (kind == KIND_HERO && kind1 == KIND_BOSS_DOOR || kind == KIND_BOSS_DOOR && kind1 == KIND_HERO ) {
 					if (RRCollision(minX, minY, minZ, maxX, maxY, maxZ, minX1, minY1, minZ1, maxX1, maxY1, maxZ1)) {
 
-						// Delete Door Object
-						if (kind == KIND_BOSS_DOOR) {
-							DeleteObject(2);
-						}
-						else if (kind1 == KIND_BOSS_DOOR) {
-							DeleteObject(2);
-						}
+						if (i == HERO_ID || j == HERO_ID)
+							player1DoorCollision = TRUE;
+						else if (i == HERO_ID2 || j == HERO_ID2)
+							player2DoorCollision = TRUE;
 
-						// Creat Boss Object
-						m_Objects[2] = new Boss();
-						m_Objects[2]->SetPos(1.5f, 0.0f, 0.0f);
-						m_Objects[2]->SetVel(0.f, 0.f, 0.f);
-						m_Objects[2]->SetAcc(0.0f, 0.0f, 0.0f);
-						m_Objects[2]->SetSize(1.0f, 1.0f, 1.0f);
-						m_Objects[2]->SetMass(0.15f);
-						m_Objects[2]->SetCoefFrict(0.5f);
-						m_Objects[2]->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
-						m_Objects[2]->SetKind(KIND_BOSS);
-						m_Objects[2]->SetHP(200);
-						m_Objects[2]->SetState(STATE_GROUND);
-						
+						if (player1DoorCollision == TRUE && player2DoorCollision == TRUE) {
+							eventflag.changeMap = TRUE;
+
+							// Delete Door Object
+							if (kind == KIND_BOSS_DOOR) {
+								DeleteObject(2);
+							}
+							else if (kind1 == KIND_BOSS_DOOR) {
+								DeleteObject(2);
+							}
+
+							// Creat Boss Object
+							m_Objects[2] = new Boss();
+							m_Objects[2]->SetPos(1.5f, 0.0f, 0.0f);
+							m_Objects[2]->SetVel(0.f, 0.f, 0.f);
+							m_Objects[2]->SetAcc(0.0f, 0.0f, 0.0f);
+							m_Objects[2]->SetSize(1.0f, 1.0f, 1.0f);
+							m_Objects[2]->SetMass(0.15f);
+							m_Objects[2]->SetCoefFrict(0.5f);
+							m_Objects[2]->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+							m_Objects[2]->SetKind(KIND_BOSS);
+							m_Objects[2]->SetHP(200);
+							m_Objects[2]->SetState(STATE_GROUND);
+
+						}
 					}
 					continue;
 				}

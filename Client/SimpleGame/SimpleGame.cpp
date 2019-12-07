@@ -37,6 +37,7 @@ BOOL g_KeySP = FALSE;
 int g_Shoot = SHOOT_NONE;
 
 bool now_play = FALSE;
+EventSet eventbuf;
 HANDLE wait_start;
 HANDLE wait_Update;
 
@@ -95,6 +96,7 @@ DWORD WINAPI RecvThread(LPVOID arg)
 	int retval;
 	SOCKET sock = (SOCKET)arg; 
 	int len;
+	bool map_switch = FALSE;
 	
 	float temp = 0.f;
 	char buf[BUFSIZE];	
@@ -106,6 +108,7 @@ DWORD WINAPI RecvThread(LPVOID arg)
 
 		recvn(sock, (char *)&len, sizeof(int), 0);
 		recvn(sock, buf, len, 0);
+		recvn(sock, (char *)&eventbuf, sizeof(EventSet), 0);
 
 		
 		//if (len <= 84) {			
@@ -186,6 +189,11 @@ DWORD WINAPI RecvThread(LPVOID arg)
 
 			curread += sizeof(recvData);
 			len -= sizeof(recvData);
+		}
+
+		if (eventbuf.changeMap == TRUE && map_switch == FALSE) {
+			g_ScnMgr->ChangeMap(BOSSROOM);
+			map_switch = TRUE;
 		}
 		SetEvent(wait_Update);
 	}
