@@ -7,7 +7,6 @@
 #include "Effect.h"
 #include "UI.h"
 #include "Global.h"
-//#include "Sound.h"
 
 class ScnMgr
 {

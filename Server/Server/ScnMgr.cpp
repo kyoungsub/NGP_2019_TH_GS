@@ -52,6 +52,12 @@ void ScnMgr::Update(float eTime)
 					m_Objects[dynamic_cast<Monster*>(m_Objects[i])->target]->GetPos(&x, &y, &z);
 					x += 0.1f, y += 0.1f;
 					dynamic_cast<Monster*>(m_Objects[i])->Update(x, y, z, eTime);
+					if (eventflag.diedPlayer1) {
+						dynamic_cast<Monster*>(m_Objects[i])->target = 1;
+					}
+					else if (eventflag.diedPlayer2) {
+						dynamic_cast<Monster*>(m_Objects[i])->target = 0;
+					}
 				}
 				else if (kind == KIND_BOSS) {
 					dynamic_cast<Boss*>(m_Objects[2])->Update(eTime);

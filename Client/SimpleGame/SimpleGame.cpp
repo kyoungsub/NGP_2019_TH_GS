@@ -114,15 +114,19 @@ DWORD WINAPI RecvThread(LPVOID arg)
 		if ((eventbuf.is_1p == FALSE && eventbuf.diedPlayer1 == TRUE) || (eventbuf.is_1p == TRUE && eventbuf.diedPlayer2 == TRUE))
 			disable_key = TRUE;
 
+		if (eventbuf.BossDead) {
+			g_ScnMgr->win = TRUE;
+		}
+		if (eventbuf.diedPlayer1 && eventbuf.diedPlayer2) {
+			g_ScnMgr->lose = TRUE;
+		}
 		
-		//if (len <= 84) {			
-			// Garbage Collector
-			for (int i = 3; i < MAX_OBJECTS; ++i) {
-				if (g_ScnMgr->m_Objects[i] != NULL) {
-					g_ScnMgr->DeleteObject(i);
-				}
+		for (int i = 3; i < MAX_OBJECTS; ++i) {
+			if (g_ScnMgr->m_Objects[i] != NULL) {
+				g_ScnMgr->DeleteObject(i);
 			}
-		//}
+		}
+
 		
 		while (len > 0) {
 			
@@ -151,7 +155,6 @@ DWORD WINAPI RecvThread(LPVOID arg)
 
 				int index = rData.hp / 40 / 2;
 				int SeqX = rData.hp / 40 % 2;
-				int hp;		
 
 				if (index >= 0) {
 					if (SeqX == 0) {
@@ -208,18 +211,6 @@ DWORD WINAPI RecvThread(LPVOID arg)
 				if(kind == KIND_MONSTER)
 					dynamic_cast<Monster*>(g_ScnMgr->m_Objects[rData.idx_num])->SetSeq(rData.SeqX, rData.SeqY);
 			}
-			else if (rData.type == KIND_WIN) {
-				// Create WIN UI
-				if (g_ScnMgr->m_Objects[rData.idx_num] == NULL) {
-					g_ScnMgr->AddObject(rData.posX, rData.posY, 0.f, 4.0f, 4.0f, 4.0f, 0, 0, 0, KIND_WIN, 20, idx_num);
-				}				
-			}
-			else if (rData.type == kIND_DEATH) {
-				// Create DEATH UI
-				g_ScnMgr->DeleteObject(2);
-				g_ScnMgr->AddObject(rData.posX, rData.posY, 0.f, 4.0f, 4.0f, 4.0f, 0, 0, 0, kIND_DEATH, 20, idx_num);
-			}
-
 
 			curread += sizeof(recvData);
 			len -= sizeof(recvData);
@@ -240,50 +231,61 @@ DWORD WINAPI SendThread(LPVOID arg)
 	char buf[8];
 
 	while (now_play == TRUE) {
-		if (g_KeyW) {
-			buf[0] = TRUE;
-		}
-		if (g_KeyA) {
-			buf[1] = TRUE;
-		}
-		if (g_KeyS) {
-			buf[2] = TRUE;
-		}
-		if (g_KeyD) {
-			buf[3] = TRUE;
-		}
-		if (g_Shoot == SHOOT_LEFT) {
-			buf[4] = TRUE;
-		}
-		if (g_Shoot == SHOOT_RIGHT) {
-			buf[5] = TRUE;
-		}
-		if (g_Shoot == SHOOT_UP) {
-			buf[6] = TRUE;
-		}
-		if (g_Shoot == SHOOT_DOWN) {
-			buf[7] = TRUE;
-		}
+		if (!disable_key) {
+			if (g_KeyW) {
+				buf[0] = TRUE;
+			}
+			if (g_KeyA) {
+				buf[1] = TRUE;
+			}
+			if (g_KeyS) {
+				buf[2] = TRUE;
+			}
+			if (g_KeyD) {
+				buf[3] = TRUE;
+			}
+			if (g_Shoot == SHOOT_LEFT) {
+				buf[4] = TRUE;
+			}
+			if (g_Shoot == SHOOT_RIGHT) {
+				buf[5] = TRUE;
+			}
+			if (g_Shoot == SHOOT_UP) {
+				buf[6] = TRUE;
+			}
+			if (g_Shoot == SHOOT_DOWN) {
+				buf[7] = TRUE;
+			}
 
-		if (!g_KeyW) {
+			if (!g_KeyW) {
+				buf[0] = FALSE;
+			}
+			if (!g_KeyA) {
+				buf[1] = FALSE;
+			}
+			if (!g_KeyS) {
+				buf[2] = FALSE;
+			}
+			if (!g_KeyD) {
+				buf[3] = FALSE;
+			}
+			if (g_Shoot == SHOOT_NONE) {
+				buf[4] = FALSE;
+				buf[5] = FALSE;
+				buf[6] = FALSE;
+				buf[7] = FALSE;
+			}
+		}
+		else {
 			buf[0] = FALSE;
-		}
-		if (!g_KeyA) {
 			buf[1] = FALSE;
-		}
-		if (!g_KeyS) {
 			buf[2] = FALSE;
-		}
-		if (!g_KeyD) {
 			buf[3] = FALSE;
-		}
-		if (g_Shoot == SHOOT_NONE) {
 			buf[4] = FALSE;
 			buf[5] = FALSE;
 			buf[6] = FALSE;
 			buf[7] = FALSE;
 		}
-		
 		int retval;
 		len = sizeof(buf);
 		retval = send(sock, (char*)&len, sizeof(int), 0);
@@ -398,7 +400,6 @@ int main(int argc, char **argv) {
 	if (ipaddress == NULL) {
 		return 1;
 	}
-	//ipaddress[strlen(ipaddress) - 1] = '\0';
 
 	// 윈속 초기화
 	WSADATA wsa;
@@ -449,9 +450,7 @@ int main(int argc, char **argv) {
 
 	glutSetKeyRepeat(GLUT_KEY_REPEAT_OFF);
 	// Init ScnMgr
-	g_ScnMgr = new ScnMgr();
-
-	
+	g_ScnMgr = new ScnMgr();	
 
 	HANDLE hThread[2];
 
@@ -468,6 +467,8 @@ int main(int argc, char **argv) {
 
 	g_PrevTime = glutGet(GLUT_ELAPSED_TIME);
 	glutTimerFunc(16, RenderScene, 0);
+
+	g_ScnMgr->m_Sound->PlaySound(g_ScnMgr->m_SoundBG, true, 0.3f);
 
 	glutMainLoop();
 

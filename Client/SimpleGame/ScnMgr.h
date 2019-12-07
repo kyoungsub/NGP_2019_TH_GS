@@ -12,8 +12,7 @@
 class ScnMgr
 {
 private:	
-	Sound *m_Sound;
-
+	
 	GLuint m_BGTexture = 0;
 	GLuint m_CharacterTexture = 0;
 	GLuint m_BulletTexture = 0;
@@ -24,7 +23,7 @@ private:
  	GLuint m_DeathTexture = 0;
 	GLuint m_BossDoorTexture = 0;
 
-	int m_SoundBG = 0;
+	
 	int m_SoundTearsFire = 0;
 	int m_SoundTearsImpacts = 0;
 	int m_SoundHurt = 0;
@@ -37,8 +36,14 @@ private:
 public:
 	Object *m_HP[2][20];
 	Object *m_Objects[MAX_OBJECTS];
+
 	Renderer * m_Renderer;
-	BOOL player1;
+	Sound *m_Sound;
+
+	int m_SoundBG = 0;
+
+	BOOL win;
+	BOOL lose;
 
 	ScnMgr();
 	~ScnMgr();

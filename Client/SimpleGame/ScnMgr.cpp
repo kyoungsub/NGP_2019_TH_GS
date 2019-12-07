@@ -29,8 +29,6 @@ ScnMgr::ScnMgr()
 	m_SoundWin = m_Sound->CreateSound("./Sounds/Holy.mp3");
 	m_SoundDeath = m_Sound->CreateSound("./Sounds/isaacdies.mp3");
 
-	//m_Sound->PlaySound(m_SoundBG, true, 0.3f);
-
 	// Load Texture
 	m_BGTexture = m_Renderer->CreatePngTexture("./textures/Basement01.png");
 	m_CharacterTexture = m_Renderer->CreatePngTexture("./textures/isaac.png");
@@ -117,6 +115,13 @@ void ScnMgr::RenderScene()
 	// Render BG
 	m_Renderer->DrawTextureRectDepth(0, 0, 0, WINDOWS_WIDTH, WINDOWS_HEIGHT, 1, 1, 1, 1, m_BGTexture, 1.f);
 
+	if (win) {
+		m_Renderer->DrawTextureRectDepth(0, 0, 0, WINDOWS_WIDTH, WINDOWS_HEIGHT, 1, 1, 1, 1, m_WinTexture, 0.f);
+	}
+	if (lose) {
+		m_Renderer->DrawTextureRectDepth(0, 0, 0, WINDOWS_WIDTH, WINDOWS_HEIGHT, 1, 1, 1, 1, m_DeathTexture, 0.f);
+	}
+
 	// Render Object
 	for (int i = 0; i < MAX_OBJECTS; ++i) {
 		if (m_Objects[i] != NULL) {
@@ -136,17 +141,21 @@ void ScnMgr::RenderScene()
 			newsY = sizeY * 100;
 			newsZ = sizeZ * 100;
 
+			int hp;
 			int kind;
 
+			m_Objects[i]->GetHP(&hp);
 			m_Objects[i]->GetKind(&kind);
 
 			if (kind == KIND_HERO) {
-				m_Renderer->DrawTextureRectHeight(
-					newX, newY, 0.0f,
-					newsX, newsY,
-					r, g, b, a,
-					m_CharacterTexture, newZ
-				);
+				if (hp != 0) {
+					m_Renderer->DrawTextureRectHeight(
+						newX, newY, 0.0f,
+						newsX, newsY,
+						r, g, b, a,
+						m_CharacterTexture, newZ
+					);
+				}
 			}
 			else if (kind == KIND_BULLET) {
 				m_Renderer->DrawTextureRectSeqXY(
@@ -226,11 +235,10 @@ void ScnMgr::RenderScene()
 				);
 			}
 
-			int hp;
 			float gauge;
 
 			if (m_Objects[i] != NULL) {
-				m_Objects[i]->GetHP(&hp);
+				
 				gauge = hp / 200.0f;
 
 				if (kind == KIND_BOSS) {
