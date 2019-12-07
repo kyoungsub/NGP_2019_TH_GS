@@ -12,7 +12,7 @@
 class ScnMgr
 {
 private:
-	Object *m_HP[20];
+	
 	Sound *m_Sound;
 
 	GLuint m_BGTexture = 0;
@@ -37,6 +37,7 @@ private:
 
 public:
 
+	Object *m_HP[20];
 	Object *m_Objects[MAX_OBJECTS];
 	Renderer * m_Renderer;
 	BOOL player1;

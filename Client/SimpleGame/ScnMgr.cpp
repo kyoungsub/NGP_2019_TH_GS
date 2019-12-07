@@ -45,6 +45,7 @@ ScnMgr::ScnMgr()
 	m_BossDoorTexture = m_Renderer->CreatePngTexture("./textures/BossDoor.png");
 
 	// Creat HP UI
+
 	m_HP[0] = new UI();
 	m_HP[0]->SetPos(2.4f, 2.5f, 0.0f);
 	m_HP[0]->SetSize(0.3f, 0.3f, 0.3f);

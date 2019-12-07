@@ -144,6 +144,20 @@ DWORD WINAPI RecvThread(LPVOID arg)
 				}
 				g_ScnMgr->m_Objects[idx_num]->SetPos(rData.posX, rData.posY, temp);
 				g_ScnMgr->m_Objects[idx_num]->SetHP(rData.hp);
+
+				int index = rData.hp / 40 / 2;
+				int SeqX = rData.hp / 40 % 2;
+				int hp;
+
+				if (SeqX == 0) {
+					g_ScnMgr->DeleteUI(index);
+				}
+
+				if (g_ScnMgr->m_HP[index] != NULL) {					
+					g_ScnMgr->m_HP[index]->SetHP(rData.hp);								
+					dynamic_cast<UI*>(g_ScnMgr->m_HP[index])->SetSeqX(SeqX);
+				}
+
 			}
 			else if (rData.type == KIND_BULLET) {
 				// Create Bullet
