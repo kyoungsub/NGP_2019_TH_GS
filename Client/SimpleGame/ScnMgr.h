@@ -11,8 +11,7 @@
 
 class ScnMgr
 {
-private:
-	
+private:	
 	Sound *m_Sound;
 
 	GLuint m_BGTexture = 0;
@@ -36,7 +35,6 @@ private:
 	int m_SoundDeath = 0;
 
 public:
-
 	Object *m_HP[2][20];
 	Object *m_Objects[MAX_OBJECTS];
 	Renderer * m_Renderer;

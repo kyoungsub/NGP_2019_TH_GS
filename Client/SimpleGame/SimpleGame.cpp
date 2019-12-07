@@ -204,6 +204,19 @@ DWORD WINAPI RecvThread(LPVOID arg)
 				if(kind == KIND_MONSTER)
 					dynamic_cast<Monster*>(g_ScnMgr->m_Objects[rData.idx_num])->SetSeq(rData.SeqX, rData.SeqY);
 			}
+			else if (rData.type == KIND_WIN) {
+				// Create WIN UI
+				if (g_ScnMgr->m_Objects[rData.idx_num] == NULL) {
+					g_ScnMgr->AddObject(rData.posX, rData.posY, 0.f, 4.0f, 4.0f, 4.0f, 0, 0, 0, KIND_WIN, 20, idx_num);
+				}				
+			}
+			else if (rData.type == kIND_DEATH) {
+				// Create DEATH UI
+				if (g_ScnMgr->m_Objects[rData.idx_num] == NULL) {
+					g_ScnMgr->AddObject(rData.posX, rData.posY, 0.f, 4.0f, 4.0f, 4.0f, 0, 0, 0, kIND_DEATH, 20, idx_num);
+				}
+			}
+
 
 			curread += sizeof(recvData);
 			len -= sizeof(recvData);

@@ -4,8 +4,6 @@
 int g_Seq = 0;
 float g_time = 0;
 
-BOOL PLAY = TRUE;
-
 ScnMgr::ScnMgr()
 {
 	m_Renderer = NULL;
